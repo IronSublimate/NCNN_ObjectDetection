@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">NCNN_ObjectDetection</string>
+    <string name="preview_area">preview_area</string>
+</resources>
