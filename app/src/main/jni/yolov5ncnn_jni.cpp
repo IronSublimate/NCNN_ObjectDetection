@@ -345,10 +345,10 @@ JNIEXPORT jboolean JNICALL Java_com_ironsublimate_ncnn_1objectdetection_YoloV5Nc
     }
 
     // init jni glue
-    jclass localObjCls = env->FindClass("com/tencent/yolov5ncnn/YoloV5Ncnn$Obj");
+    jclass localObjCls = env->FindClass("com/ironsublimate/ncnn_objectdetection/NCNNDetector$Obj");
     objCls = reinterpret_cast<jclass>(env->NewGlobalRef(localObjCls));
 
-    constructortorId = env->GetMethodID(objCls, "<init>", "(Lcom/tencent/yolov5ncnn/YoloV5Ncnn;)V");
+    constructortorId = env->GetMethodID(objCls, "<init>", "()V");
 
     xId = env->GetFieldID(objCls, "x", "F");
     yId = env->GetFieldID(objCls, "y", "F");

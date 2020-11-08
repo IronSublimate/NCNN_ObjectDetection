@@ -1,15 +1,9 @@
 package com.ironsublimate.ncnn_objectdetection;
 
-import android.annotation.SuppressLint;
-import android.app.Activity;
-import android.content.Context;
 import android.graphics.*;
-import android.media.Image;
 import android.os.*;
-import android.view.LayoutInflater;
 import android.view.Window;
 import android.view.WindowManager;
-import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.camera.core.*;
@@ -24,17 +18,11 @@ import androidx.lifecycle.LifecycleOwner;
 import android.content.pm.PackageManager;
 import android.util.Log;
 import android.view.View;
-import android.widget.ImageView;
 import android.widget.Toast;
 
 import com.google.common.util.concurrent.ListenableFuture;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.nio.ByteBuffer;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.Locale;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
@@ -47,7 +35,8 @@ public class MainActivity extends AppCompatActivity {
 //    private final String[] REQUIRED_PERMISSIONS = new String[]{"android.permission.CAMERA", "android.permission.WRITE_EXTERNAL_STORAGE"};
     private final String[] REQUIRED_PERMISSIONS = new String[]{"android.permission.CAMERA"};
 
-    private MobilenetSSDNcnn mobilenetssdncnn = new MobilenetSSDNcnn();
+//    private NCNNDetector ncnnDetector = new MobilenetSSDNcnn();
+    private NCNNDetector ncnnDetector = new YoloV5Ncnn();
 
     PreviewView mPreviewView;
     //    ImageView imageView;
@@ -81,7 +70,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
         //初始化目标检测
-        boolean ret_init = mobilenetssdncnn.Init(getAssets());
+        boolean ret_init = ncnnDetector.Init(getAssets());
         if (!ret_init) {
             Log.e("MainActivity", "mobilenetssdncnn Init failed");
         }
@@ -158,7 +147,7 @@ public class MainActivity extends AppCompatActivity {
             Bitmap bitmap=mPreviewView.getBitmap();
 //            Log.i(TAG,"Bitmap width:"+bitmap.getWidth());
 //            Log.i(TAG,"Bitmap height:"+bitmap.getHeight());
-            Obj[] objs= mobilenetssdncnn.Detect(bitmap,false);
+            NCNNDetector.Obj[] objs= ncnnDetector.Detect(bitmap,false);
             runOnUiThread(()->{
                 overlay.drawRects(objs);
             });
