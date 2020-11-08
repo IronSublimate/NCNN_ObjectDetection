@@ -36,6 +36,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fvisibility=hidden -fvisibility-inlines
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-rtti -fno-exceptions")
 
 add_library(mobilenetssdncnn SHARED mobilenetssdncnn_jni.cpp)
+# add_library(yolov5ncnn SHARED yolov5ncnn_jni.cpp)
 
 target_link_libraries(mobilenetssdncnn
     ncnn

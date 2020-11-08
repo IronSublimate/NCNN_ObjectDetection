@@ -107,10 +107,10 @@ JNIEXPORT jboolean JNICALL Java_com_ironsublimate_ncnn_1objectdetection_Mobilene
     }
 
     // init jni glue
-    jclass localObjCls = env->FindClass("com/ironsublimate/ncnn_objectdetection/MobilenetSSDNcnn$Obj");
+    jclass localObjCls = env->FindClass("com/ironsublimate/ncnn_objectdetection/Obj");
     objCls = reinterpret_cast<jclass>(env->NewGlobalRef(localObjCls));
 
-    constructortorId = env->GetMethodID(objCls, "<init>", "(Lcom/ironsublimate/ncnn_objectdetection/MobilenetSSDNcnn;)V");
+    constructortorId = env->GetMethodID(objCls, "<init>", "()V");
 
     xId = env->GetFieldID(objCls, "x", "F");
     yId = env->GetFieldID(objCls, "y", "F");

@@ -10,7 +10,7 @@ import android.view.View;
 
 
 public class Overlay extends View {
-    private MobilenetSSDNcnn.Obj[] objects=null;
+    private Obj[] objects=null;
 
     public Overlay(Context context, AttributeSet attributeSet) {
         super(context, attributeSet);
@@ -59,7 +59,7 @@ public class Overlay extends View {
         }
     }
 
-    public void drawRects(MobilenetSSDNcnn.Obj[] rects){
+    public void drawRects(Obj[] rects){
         this.objects=rects;
         this.invalidate();
     }

@@ -158,7 +158,7 @@ public class MainActivity extends AppCompatActivity {
             Bitmap bitmap=mPreviewView.getBitmap();
 //            Log.i(TAG,"Bitmap width:"+bitmap.getWidth());
 //            Log.i(TAG,"Bitmap height:"+bitmap.getHeight());
-            MobilenetSSDNcnn.Obj[] objs= mobilenetssdncnn.Detect(bitmap,false);
+            Obj[] objs= mobilenetssdncnn.Detect(bitmap,false);
             runOnUiThread(()->{
                 overlay.drawRects(objs);
             });
