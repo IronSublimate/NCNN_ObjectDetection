@@ -4,6 +4,7 @@ import android.graphics.*;
 import android.os.*;
 import android.view.Window;
 import android.view.WindowManager;
+import android.widget.Button;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.camera.core.*;
@@ -32,17 +33,21 @@ public class MainActivity extends AppCompatActivity {
     private static final String TAG = "123";
     private Executor executor = Executors.newSingleThreadExecutor();
     private int REQUEST_CODE_PERMISSIONS = 1001;
-//    private final String[] REQUIRED_PERMISSIONS = new String[]{"android.permission.CAMERA", "android.permission.WRITE_EXTERNAL_STORAGE"};
+    //    private final String[] REQUIRED_PERMISSIONS = new String[]{"android.permission.CAMERA", "android.permission.WRITE_EXTERNAL_STORAGE"};
     private final String[] REQUIRED_PERMISSIONS = new String[]{"android.permission.CAMERA"};
 
-//    private NCNNDetector ncnnDetector = new MobilenetSSDNcnn();
-    private NCNNDetector ncnnDetector = new YoloV5Ncnn();
+    private ProcessCameraProvider cameraProvider = null;
+    //    private NCNNDetector ncnnDetector = new MobilenetSSDNcnn();
+    private NCNNDetector ncnnDetector = null;
+    ;
 
     PreviewView mPreviewView;
     //    ImageView imageView;
 //    ImageView captureImage;
 //    TextView textView1;
     Overlay overlay;
+    Button button_setting;
+    volatile boolean isProcessing = false; //太sb了
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -59,9 +64,18 @@ public class MainActivity extends AppCompatActivity {
 
 //        captureImage = findViewById(R.id.captureImg);
 //        textView1 = findViewById(R.id.textView1);
-        overlay=findViewById(R.id.overlay);
+        overlay = findViewById(R.id.overlay);
 //        findViewById(R.id.linearLayout).bringToFront();
 //        findViewById(R.id.previewView).bringToFront();
+        Log.d(TAG, "On Create");
+
+        if (ncnnDetector == null) {
+            ncnnDetector = new YoloV5Ncnn();
+            boolean ret_init = ncnnDetector.Init(getAssets());
+            if (!ret_init) {
+                Log.e("MainActivity", "mobilenetssdncnn Init failed");
+            }
+        }
 
         if (allPermissionsGranted()) {
             startCamera(); //start camera if permission has been granted by user
@@ -70,10 +84,20 @@ public class MainActivity extends AppCompatActivity {
         }
 
         //初始化目标检测
-        boolean ret_init = ncnnDetector.Init(getAssets());
-        if (!ret_init) {
-            Log.e("MainActivity", "mobilenetssdncnn Init failed");
-        }
+
+    }
+
+    @Override
+    protected void onDestroy() {
+//        if(imageAnalysis != null) {
+//            imageAnalysis.clearAnalyzer();
+//
+//        }
+        while(isProcessing){} //image analyse时间过长，导致转屏的时候libc空指针异常崩溃
+//        if (cameraProvider != null) {
+//            cameraProvider.unbindAll();
+//        }
+        super.onDestroy();
     }
 
     //顶部底部全透明
@@ -118,7 +142,7 @@ public class MainActivity extends AppCompatActivity {
 
         cameraProviderFuture.addListener(() -> {
             try {
-                ProcessCameraProvider cameraProvider = cameraProviderFuture.get();
+                cameraProvider = cameraProviderFuture.get();
                 bindPreview(cameraProvider);
 
             } catch (ExecutionException | InterruptedException e) {
@@ -128,7 +152,8 @@ public class MainActivity extends AppCompatActivity {
         }, ContextCompat.getMainExecutor(this));
     }
 
-//    static int i = 0;
+    //    static int i = 0;
+    ImageAnalysis imageAnalysis = null;
 
     void bindPreview(@NonNull ProcessCameraProvider cameraProvider) {
 
@@ -139,20 +164,28 @@ public class MainActivity extends AppCompatActivity {
                 .requireLensFacing(CameraSelector.LENS_FACING_BACK)
                 .build();
 
-        ImageAnalysis imageAnalysis = new ImageAnalysis.Builder()
+        imageAnalysis = new ImageAnalysis.Builder()
+                .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
                 .build();
         imageAnalysis.setAnalyzer(executor, image -> {
+            isProcessing = true;
             int rotationDegrees = image.getImageInfo().getRotationDegrees();
             // insert your code here.
-            Bitmap bitmap=mPreviewView.getBitmap();
+            Bitmap bitmap = mPreviewView.getBitmap();
 //            Log.i(TAG,"Bitmap width:"+bitmap.getWidth());
 //            Log.i(TAG,"Bitmap height:"+bitmap.getHeight());
-            NCNNDetector.Obj[] objs= ncnnDetector.Detect(bitmap,false);
-            runOnUiThread(()->{
-                overlay.drawRects(objs);
-            });
+            if (bitmap != null) {
+                Log.d(TAG, "before detect");
+                NCNNDetector.Obj[] objs = ncnnDetector.Detect(bitmap, false);
+                Log.d(TAG, "after detect");
+                runOnUiThread(() -> {
+                    overlay.drawRects(objs);
+                });
+            }
             image.close();
+            isProcessing = false;
         });
+
         ImageCapture.Builder builder = new ImageCapture.Builder();
 
         //Vendor-Extensions (The CameraX extensions dependency in build.gradle)
@@ -171,7 +204,6 @@ public class MainActivity extends AppCompatActivity {
         preview.setSurfaceProvider(mPreviewView.createSurfaceProvider());
 
         Camera camera = cameraProvider.bindToLifecycle((LifecycleOwner) this, cameraSelector, preview, imageAnalysis, imageCapture);
-
 //        captureImage.setOnClickListener(v -> {
 //
 //            SimpleDateFormat mDateFormat = new SimpleDateFormat("yyyyMMddHHmmss", Locale.US);
