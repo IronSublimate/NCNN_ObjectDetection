@@ -1,5 +1,6 @@
 package com.ironsublimate.ncnn_objectdetection;
 
+import android.content.Intent;
 import android.graphics.*;
 import android.os.*;
 import android.view.Window;
@@ -30,7 +31,8 @@ import java.util.concurrent.Executors;
 
 public class MainActivity extends AppCompatActivity {
 
-    private static final String TAG = "123";
+    private static final String TAG = "MainActivity";
+    private  static final int settings_result_code=2;
     private Executor executor = Executors.newSingleThreadExecutor();
     private int REQUEST_CODE_PERMISSIONS = 1001;
     //    private final String[] REQUIRED_PERMISSIONS = new String[]{"android.permission.CAMERA", "android.permission.WRITE_EXTERNAL_STORAGE"};
@@ -39,7 +41,9 @@ public class MainActivity extends AppCompatActivity {
     private ProcessCameraProvider cameraProvider = null;
     //    private NCNNDetector ncnnDetector = new MobilenetSSDNcnn();
     private NCNNDetector ncnnDetector = null;
-    ;
+
+    //settings
+    private boolean useGPU = false;
 
     PreviewView mPreviewView;
     //    ImageView imageView;
@@ -65,8 +69,13 @@ public class MainActivity extends AppCompatActivity {
 //        captureImage = findViewById(R.id.captureImg);
 //        textView1 = findViewById(R.id.textView1);
         overlay = findViewById(R.id.overlay);
+        button_setting = findViewById(R.id.button_setting);
 //        findViewById(R.id.linearLayout).bringToFront();
 //        findViewById(R.id.previewView).bringToFront();
+        button_setting.setOnClickListener((View view) -> {
+            Intent intent = new Intent(this, SettingsActivity.class);
+            startActivityForResult(intent, settings_result_code);
+        });
         Log.d(TAG, "On Create");
 
         if (ncnnDetector == null) {
@@ -87,13 +96,33 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    //
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, requestCode, data);
+        switch (requestCode) {
+            case settings_result_code:
+                if (resultCode == RESULT_OK) {
+                    this.useGPU = data.getBooleanExtra(this.getResources().getString(R.string.useGPU), false);
+                    Toast.makeText(MainActivity.this, "" + this.useGPU, Toast.LENGTH_SHORT).show();
+                    int method_index = data.getIntExtra(this.getResources().getString(R.string.method_index), -1);
+                    if (method_index >= 0) {
+                        Toast.makeText(MainActivity.this, "" + method_index, Toast.LENGTH_SHORT).show();
+                    }
+                }
+                break;
+            default:
+        }
+    }
+
     @Override
     protected void onDestroy() {
 //        if(imageAnalysis != null) {
 //            imageAnalysis.clearAnalyzer();
 //
 //        }
-        while(isProcessing){} //image analyse时间过长，导致转屏的时候libc空指针异常崩溃
+        while (isProcessing) {
+        } //image analyse时间过长，导致转屏的时候libc空指针异常崩溃
 //        if (cameraProvider != null) {
 //            cameraProvider.unbindAll();
 //        }

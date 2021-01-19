@@ -23,5 +23,10 @@
             android:id="@+id/overlay"
             android:layout_width="match_parent"
             android:layout_height="match_parent" />
+    <Button
+            android:text="Button"
+            android:layout_width="100dp"
+            android:layout_height="100dp" android:id="@+id/button_setting"
+            app:layout_constraintTop_toTopOf="parent" android:layout_marginTop="20dp"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
