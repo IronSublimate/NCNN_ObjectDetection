@@ -48,4 +48,6 @@ dependencies {
     implementation 'androidx.camera:camera-view:1.0.0-alpha12'
     implementation 'androidx.camera:camera-extensions:1.0.0-alpha12'
     implementation 'androidx.cardview:cardview:1.0.0'
+    implementation 'org.jetbrains:annotations:15.0'
+    implementation 'org.jetbrains:annotations:15.0'
 }

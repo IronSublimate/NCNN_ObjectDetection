@@ -10,16 +10,20 @@ import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.preference.*;
 
+import java.util.HashMap;
 import java.util.List;
 
 public class SettingsActivity extends AppCompatActivity {
-    private static String TAG = "SettingsActivity";
+    private static final String TAG = "SettingsActivity";
+    public static final String KEY_SWITCH_USE_GPU = "switch_useGPU";
     private static ListPreference listPreference = null;
     private static SwitchPreferenceCompat useGPU = null;
 
+    private static HashMap<String,String> methodMap=null;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        methodMap=(HashMap<String, String>)(this.getIntent().getSerializableExtra(MainActivity.detectMethodsIntentName));
         setContentView(R.layout.settings_activity);
         getSupportFragmentManager()
                 .beginTransaction()
@@ -40,12 +44,18 @@ public class SettingsActivity extends AppCompatActivity {
         public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
             setPreferencesFromResource(R.xml.root_preferences, rootKey);
             PreferenceManager manager = getPreferenceManager();
-            listPreference = manager.findPreference("reply");
-            useGPU = manager.findPreference(this.getString(R.string.useGPU));
-            if (listPreference == null || useGPU == null) {
-                Log.e(TAG, "Cannot find Preference");
-                return;
-            }
+            ListPreference listPreference = manager.findPreference(this.getResources().getString(R.string.method_index));
+
+//            listPreference.setEntries(new String[]{"name hyx123567","name hyx456123"});
+//            listPreference.setEntryValues(new String[]{"MobileNet SSD","YOLOv5"});
+//            listPreference.setDefaultValue("YOLOv5");
+            listPreference.setEntries(methodMap.keySet().toArray(new String[0]));
+            listPreference.setEntryValues(methodMap.values().toArray(new String[0]));
+//            useGPU = manager.findPreference(KEY_SWITCH_USE_GPU);
+//            if (listPreference == null || useGPU == null) {
+//                Log.e(TAG, "Cannot find Preference");
+//                return;
+//            }
 //            listPreference.setEntries();
 //            String s=listPreference.getValue();
 //            Log.i(TAG,s);
@@ -62,7 +72,7 @@ public class SettingsActivity extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         if (item.getItemId() == android.R.id.home) {
-            returnMain();
+            //returnMain();
             finish();
             return true;
         }
@@ -71,7 +81,7 @@ public class SettingsActivity extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
-        returnMain();
+        //returnMain();
         super.onBackPressed();
     }
 //    @Override

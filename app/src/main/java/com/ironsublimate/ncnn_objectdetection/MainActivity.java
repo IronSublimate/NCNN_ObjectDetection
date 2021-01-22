@@ -1,6 +1,7 @@
 package com.ironsublimate.ncnn_objectdetection;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.*;
 import android.os.*;
 import android.view.Window;
@@ -22,26 +23,39 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
+import androidx.preference.PreferenceManager;
+import androidx.preference.SwitchPreference;
 import com.google.common.util.concurrent.ListenableFuture;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
 public class MainActivity extends AppCompatActivity {
 
+    public static final String detectMethodsIntentName = "DETECT_METHOD_INTENT";
     private static final String TAG = "MainActivity";
-    private  static final int settings_result_code=2;
-    private Executor executor = Executors.newSingleThreadExecutor();
-    private int REQUEST_CODE_PERMISSIONS = 1001;
+    private static final int settings_result_code = 2;
+    private final Executor executor = Executors.newSingleThreadExecutor();
+    private final int REQUEST_CODE_PERMISSIONS = 1001;
     //    private final String[] REQUIRED_PERMISSIONS = new String[]{"android.permission.CAMERA", "android.permission.WRITE_EXTERNAL_STORAGE"};
     private final String[] REQUIRED_PERMISSIONS = new String[]{"android.permission.CAMERA"};
 
     private ProcessCameraProvider cameraProvider = null;
     //    private NCNNDetector ncnnDetector = new MobilenetSSDNcnn();
     private NCNNDetector ncnnDetector = null;
-
+    //    private ArrayList<NCNNDetector> ncnnDetectors=new ArrayList<>();
+    private final HashMap<String, String> detectMethods = new HashMap<String, String>() {{
+        // method name : class name
+        //method name shows in GUI
+        //class name is used to reflect
+        put("MobileNet SSD", MobilenetSSDNcnn.class.getName());
+        put("YOLOv5", YoloV5Ncnn.class.getName());
+    }};
     //settings
     private boolean useGPU = false;
 
@@ -51,7 +65,7 @@ public class MainActivity extends AppCompatActivity {
 //    TextView textView1;
     Overlay overlay;
     Button button_setting;
-    volatile boolean isProcessing = false; //太sb了
+    volatile boolean isProcessing = false; //Too stupid
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -74,17 +88,12 @@ public class MainActivity extends AppCompatActivity {
 //        findViewById(R.id.previewView).bringToFront();
         button_setting.setOnClickListener((View view) -> {
             Intent intent = new Intent(this, SettingsActivity.class);
-            startActivityForResult(intent, settings_result_code);
+            intent.putExtra(detectMethodsIntentName, this.detectMethods);
+            startActivity(intent);
         });
+        PreferenceManager.setDefaultValues(this, R.xml.root_preferences, false);
         Log.d(TAG, "On Create");
 
-        if (ncnnDetector == null) {
-            ncnnDetector = new YoloV5Ncnn();
-            boolean ret_init = ncnnDetector.Init(getAssets());
-            if (!ret_init) {
-                Log.e("MainActivity", "mobilenetssdncnn Init failed");
-            }
-        }
 
         if (allPermissionsGranted()) {
             startCamera(); //start camera if permission has been granted by user
@@ -96,24 +105,53 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    //
     @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, requestCode, data);
-        switch (requestCode) {
-            case settings_result_code:
-                if (resultCode == RESULT_OK) {
-                    this.useGPU = data.getBooleanExtra(this.getResources().getString(R.string.useGPU), false);
-                    Toast.makeText(MainActivity.this, "" + this.useGPU, Toast.LENGTH_SHORT).show();
-                    int method_index = data.getIntExtra(this.getResources().getString(R.string.method_index), -1);
-                    if (method_index >= 0) {
-                        Toast.makeText(MainActivity.this, "" + method_index, Toast.LENGTH_SHORT).show();
-                    }
-                }
-                break;
-            default:
+    protected void onResume() {
+        super.onResume();
+        // Load  Preference
+
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+        this.useGPU = sharedPreferences.getBoolean(this.getResources().getString(R.string.useGPU), false);
+        String methodClassName = sharedPreferences.getString(this.getResources().getString(R.string.method_index), "");
+//        Toast.makeText(this,useGPU.toString(),Toast.LENGTH_SHORT).show();
+//        Toast.makeText(this,index,Toast.LENGTH_SHORT).show();
+
+//        if (ncnnDetector == null) {
+        //Choose a new detector in settings or first init detector
+        if (ncnnDetector == null || !ncnnDetector.getClass().getName().equals(methodClassName)) {
+            try {
+                waitCameraProcessFinished();
+                ncnnDetector = (NCNNDetector) (Class.forName(methodClassName).newInstance());
+            } catch (IllegalAccessException | InstantiationException | ClassNotFoundException e) {
+                e.printStackTrace();
+                return;
+            }
         }
+//        ncnnDetector=new YoloV5Ncnn();
+        boolean ret_init = ncnnDetector.Init(getAssets());
+        if (!ret_init) {
+            Log.e(TAG, "mobilenetssdncnn Init failed");
+        }
+//        }
     }
+    //
+//    @Override
+//    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+//        super.onActivityResult(requestCode, requestCode, data);
+//        switch (requestCode) {
+//            case settings_result_code:
+//                if (resultCode == RESULT_OK) {
+//                    this.useGPU = data.getBooleanExtra(this.getResources().getString(R.string.useGPU), false);
+//                    Toast.makeText(MainActivity.this, "" + this.useGPU, Toast.LENGTH_SHORT).show();
+//                    int method_index = data.getIntExtra(this.getResources().getString(R.string.method_index), -1);
+//                    if (method_index >= 0) {
+//                        Toast.makeText(MainActivity.this, "" + method_index, Toast.LENGTH_SHORT).show();
+//                    }
+//                }
+//                break;
+//            default:
+//        }
+//    }
 
     @Override
     protected void onDestroy() {
@@ -121,8 +159,8 @@ public class MainActivity extends AppCompatActivity {
 //            imageAnalysis.clearAnalyzer();
 //
 //        }
-        while (isProcessing) {
-        } //image analyse时间过长，导致转屏的时候libc空指针异常崩溃
+        waitCameraProcessFinished();
+        //image analyse时间过长，导致转屏的时候libc空指针异常崩溃
 //        if (cameraProvider != null) {
 //            cameraProvider.unbindAll();
 //        }
@@ -256,6 +294,12 @@ public class MainActivity extends AppCompatActivity {
 //                }
 //            });
 //        });
+    }
+
+    //will catch libc error if not wait for detection finished
+    private void waitCameraProcessFinished() {
+        while (isProcessing) {
+        }
     }
 
     private Bitmap rotateBitmap(Bitmap origin, float alpha) {

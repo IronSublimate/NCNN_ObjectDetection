@@ -9,7 +9,7 @@
 
     <!-- Messages Preferences -->
     <string name="signature_title">Your signature</string>
-    <string name="reply_title">Default reply action</string>
+    <string name="reply_title">Object Detection Method</string>
 
     <!-- Sync Preferences -->
     <string name="sync_title">Use GPU Accelerate</string>

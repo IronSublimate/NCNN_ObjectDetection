@@ -25,14 +25,17 @@
                 app:title="@string/signature_title"
                 app:useSimpleSummaryProvider="true"/>
 
+<!--        <ListPreference-->
+<!--                app:key="@string/method_index"-->
+<!--                app:title="@string/reply_title"-->
+<!--                app:entries="@array/reply_entries"-->
+<!--                app:entryValues="@array/reply_values"-->
+<!--                app:defaultValue="reply"-->
+<!--                app:useSimpleSummaryProvider="true" android:id="@+id/list_method"/>-->
         <ListPreference
-                app:key="reply"
+                app:key="@string/method_index"
                 app:title="@string/reply_title"
-                app:entries="@array/reply_entries"
-                app:entryValues="@array/reply_values"
-                app:defaultValue="reply"
                 app:useSimpleSummaryProvider="true" android:id="@+id/list_method"/>
-
     </PreferenceCategory>
 
     <PreferenceCategory
