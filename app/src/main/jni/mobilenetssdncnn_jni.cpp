@@ -122,6 +122,12 @@ JNIEXPORT jboolean JNICALL Java_com_ironsublimate_ncnn_1objectdetection_Mobilene
     return JNI_TRUE;
 }
 
+// public native boolean Deinit();
+JNIEXPORT jboolean JNICALL Java_com_ironsublimate_ncnn_1objectdetection_MobilenetSSDNcnn_Deinit(JNIEnv* env, jobject thiz)
+{
+    mobilenetssd.clear();
+    return JNI_TRUE;
+}
 // public native Obj[] Detect(Bitmap bitmap, boolean use_gpu);
 JNIEXPORT jobjectArray JNICALL Java_com_ironsublimate_ncnn_1objectdetection_MobilenetSSDNcnn_Detect(JNIEnv* env, jobject thiz, jobject bitmap, jboolean use_gpu)
 {

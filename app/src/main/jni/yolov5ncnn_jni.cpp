@@ -360,6 +360,12 @@ JNIEXPORT jboolean JNICALL Java_com_ironsublimate_ncnn_1objectdetection_YoloV5Nc
     return JNI_TRUE;
 }
 
+// public native boolean Deinit(AssetManager mgr);
+JNIEXPORT jboolean JNICALL Java_com_ironsublimate_ncnn_1objectdetection_YoloV5Ncnn_Deinit(JNIEnv* env, jobject thiz)
+{
+    yolov5.clear();
+    return JNI_TRUE;
+}
 // public native Obj[] Detect(Bitmap bitmap, boolean use_gpu);
 JNIEXPORT jobjectArray JNICALL Java_com_ironsublimate_ncnn_1objectdetection_YoloV5Ncnn_Detect(JNIEnv* env, jobject thiz, jobject bitmap, jboolean use_gpu)
 {

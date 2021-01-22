@@ -22,6 +22,7 @@ public class YoloV5Ncnn implements NCNNDetector {
 
     public native Obj[] Detect(Bitmap bitmap, boolean use_gpu);
 
+    public native boolean Deinit();
     static {
         System.loadLibrary("yolov5ncnn");
     }

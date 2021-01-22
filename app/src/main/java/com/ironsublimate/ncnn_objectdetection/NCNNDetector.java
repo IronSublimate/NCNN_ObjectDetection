@@ -15,4 +15,6 @@ public interface NCNNDetector {
     public boolean Init(AssetManager mgr);
 
     public Obj[] Detect(Bitmap bitmap, boolean use_gpu);
+
+    public boolean Deinit();
 }

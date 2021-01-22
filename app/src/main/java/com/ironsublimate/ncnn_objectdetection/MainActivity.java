@@ -7,6 +7,7 @@ import android.os.*;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.Button;
+
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.camera.core.*;
@@ -25,6 +26,7 @@ import android.widget.Toast;
 
 import androidx.preference.PreferenceManager;
 import androidx.preference.SwitchPreference;
+
 import com.google.common.util.concurrent.ListenableFuture;
 
 import java.io.File;
@@ -120,7 +122,11 @@ public class MainActivity extends AppCompatActivity {
         //Choose a new detector in settings or first init detector
         if (ncnnDetector == null || !ncnnDetector.getClass().getName().equals(methodClassName)) {
             try {
-                waitCameraProcessFinished();
+//                waitCameraProcessFinished();
+//                if (this.ncnnDetector != null) {
+//                    this.ncnnDetector.Deinit();
+//                    this.ncnnDetector=null;
+//                }
                 ncnnDetector = (NCNNDetector) (Class.forName(methodClassName).newInstance());
             } catch (IllegalAccessException | InstantiationException | ClassNotFoundException e) {
                 e.printStackTrace();
@@ -155,10 +161,6 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onDestroy() {
-//        if(imageAnalysis != null) {
-//            imageAnalysis.clearAnalyzer();
-//
-//        }
         waitCameraProcessFinished();
         //image analyse时间过长，导致转屏的时候libc空指针异常崩溃
 //        if (cameraProvider != null) {

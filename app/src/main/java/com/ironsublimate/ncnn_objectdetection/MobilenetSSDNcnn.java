@@ -20,7 +20,7 @@ import android.graphics.Bitmap;
 public class MobilenetSSDNcnn implements NCNNDetector {
     public native boolean Init(AssetManager mgr);
 
-
+    public native boolean Deinit();
 
     public native Obj[] Detect(Bitmap bitmap, boolean use_gpu);
 

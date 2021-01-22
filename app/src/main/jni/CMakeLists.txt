@@ -1,21 +1,20 @@
 project(mobilenetssdncnn)
 # project(yolov5ncnn)
 cmake_minimum_required(VERSION 3.4.1)
-
 # import ncnn library
 add_library(ncnn STATIC IMPORTED)
 # change this folder path to yours
-set_target_properties(ncnn PROPERTIES IMPORTED_LOCATION ${CMAKE_SOURCE_DIR}/ncnn-android-vulkan-lib/${ANDROID_ABI}/libncnn.a)
-include_directories(${CMAKE_SOURCE_DIR}/ncnn-android-vulkan-lib/include/ncnn)
+set_target_properties(ncnn PROPERTIES IMPORTED_LOCATION ${CMAKE_SOURCE_DIR}/ncnn-android-vulkan-lib/${ANDROID_ABI}/lib/libncnn.a)
+include_directories(${CMAKE_SOURCE_DIR}/ncnn-android-vulkan-lib/${ANDROID_ABI}/include/ncnn)
 
 add_library(glslang STATIC IMPORTED)
 add_library(OGLCompiler STATIC IMPORTED)
 add_library(OSDependent STATIC IMPORTED)
 add_library(SPIRV STATIC IMPORTED)
-set_target_properties(glslang PROPERTIES IMPORTED_LOCATION ${CMAKE_SOURCE_DIR}/ncnn-android-vulkan-lib/${ANDROID_ABI}/libglslang.a)
-set_target_properties(OGLCompiler PROPERTIES IMPORTED_LOCATION ${CMAKE_SOURCE_DIR}/ncnn-android-vulkan-lib/${ANDROID_ABI}/libOGLCompiler.a)
-set_target_properties(OSDependent PROPERTIES IMPORTED_LOCATION ${CMAKE_SOURCE_DIR}/ncnn-android-vulkan-lib/${ANDROID_ABI}/libOSDependent.a)
-set_target_properties(SPIRV PROPERTIES IMPORTED_LOCATION ${CMAKE_SOURCE_DIR}/ncnn-android-vulkan-lib/${ANDROID_ABI}/libSPIRV.a)
+set_target_properties(glslang PROPERTIES IMPORTED_LOCATION ${CMAKE_SOURCE_DIR}/ncnn-android-vulkan-lib/${ANDROID_ABI}/lib/libglslang.a)
+set_target_properties(OGLCompiler PROPERTIES IMPORTED_LOCATION ${CMAKE_SOURCE_DIR}/ncnn-android-vulkan-lib/${ANDROID_ABI}/lib/libOGLCompiler.a)
+set_target_properties(OSDependent PROPERTIES IMPORTED_LOCATION ${CMAKE_SOURCE_DIR}/ncnn-android-vulkan-lib/${ANDROID_ABI}/lib/libOSDependent.a)
+set_target_properties(SPIRV PROPERTIES IMPORTED_LOCATION ${CMAKE_SOURCE_DIR}/ncnn-android-vulkan-lib/${ANDROID_ABI}/lib/libSPIRV.a)
 
 # openmp
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fopenmp")
