@@ -34,21 +34,15 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fvisibility=hidden -fvisibility-inlines
 # disable rtti and exceptions
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-rtti -fno-exceptions")
 
-add_library(mobilenetssdncnn SHARED mobilenetssdncnn_jni.cpp)
-add_library(yolov5ncnn SHARED yolov5ncnn_jni.cpp)
-
-target_link_libraries(mobilenetssdncnn
-    ncnn
-
-    glslang SPIRV OGLCompiler OSDependent
-
-    android
-    z
-    log
-    jnigraphics
-    vulkan
+add_library(
+        ncnn_detector SHARED
+        NCNN_detector_public_jni.cpp
+        mobilenetssdncnn_jni.cpp
+        yolov5ncnn_jni.cpp
+        # add your cpp here
 )
-target_link_libraries(yolov5ncnn
+
+target_link_libraries(ncnn_detector
     ncnn
 
     glslang SPIRV OGLCompiler OSDependent

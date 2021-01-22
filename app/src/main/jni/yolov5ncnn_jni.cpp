@@ -288,21 +288,7 @@ static jfieldID hId;
 static jfieldID labelId;
 static jfieldID probId;
 
-JNIEXPORT jint JNI_OnLoad(JavaVM* vm, void* reserved)
-{
-    __android_log_print(ANDROID_LOG_DEBUG, "YoloV5Ncnn", "JNI_OnLoad");
 
-    ncnn::create_gpu_instance();
-
-    return JNI_VERSION_1_4;
-}
-
-JNIEXPORT void JNI_OnUnload(JavaVM* vm, void* reserved)
-{
-    __android_log_print(ANDROID_LOG_DEBUG, "YoloV5Ncnn", "JNI_OnUnload");
-
-    ncnn::destroy_gpu_instance();
-}
 
 // public native boolean Init(AssetManager mgr);
 JNIEXPORT jboolean JNICALL Java_com_ironsublimate_ncnn_1objectdetection_YoloV5Ncnn_Init(JNIEnv* env, jobject thiz, jobject assetManager)

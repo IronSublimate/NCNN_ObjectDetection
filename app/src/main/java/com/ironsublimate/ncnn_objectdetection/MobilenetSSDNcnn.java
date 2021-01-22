@@ -17,14 +17,11 @@ package com.ironsublimate.ncnn_objectdetection;
 import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 
-public class MobilenetSSDNcnn implements NCNNDetector {
+public class MobilenetSSDNcnn extends NCNNDetector {
     public native boolean Init(AssetManager mgr);
 
     public native boolean Deinit();
 
     public native Obj[] Detect(Bitmap bitmap, boolean use_gpu);
 
-    static {
-        System.loadLibrary("mobilenetssdncnn");
-    }
 }

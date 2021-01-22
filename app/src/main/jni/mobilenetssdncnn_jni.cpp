@@ -52,21 +52,7 @@ static jfieldID hId;
 static jfieldID labelId;
 static jfieldID probId;
 
-JNIEXPORT jint JNI_OnLoad(JavaVM* vm, void* reserved)
-{
-    __android_log_print(ANDROID_LOG_DEBUG, "MobilenetSSDNcnn", "JNI_OnLoad");
 
-    ncnn::create_gpu_instance();
-
-    return JNI_VERSION_1_4;
-}
-
-JNIEXPORT void JNI_OnUnload(JavaVM* vm, void* reserved)
-{
-    __android_log_print(ANDROID_LOG_DEBUG, "MobilenetSSDNcnn", "JNI_OnUnload");
-
-    ncnn::destroy_gpu_instance();
-}
 
 // public native boolean Init(AssetManager mgr);
 JNIEXPORT jboolean JNICALL Java_com_ironsublimate_ncnn_1objectdetection_MobilenetSSDNcnn_Init(JNIEnv* env, jobject thiz, jobject assetManager)

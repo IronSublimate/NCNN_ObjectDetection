@@ -17,13 +17,11 @@ package com.ironsublimate.ncnn_objectdetection;
 import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 
-public class YoloV5Ncnn implements NCNNDetector {
+public class YoloV5Ncnn extends NCNNDetector {
     public native boolean Init(AssetManager mgr);
 
     public native Obj[] Detect(Bitmap bitmap, boolean use_gpu);
 
     public native boolean Deinit();
-    static {
-        System.loadLibrary("yolov5ncnn");
-    }
+
 }
