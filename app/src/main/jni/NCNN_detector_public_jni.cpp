@@ -11,7 +11,7 @@
 
 extern "C" {
 JNIEXPORT jint JNI_OnLoad(JavaVM *vm, void *reserved) {
-    __android_log_print(ANDROID_LOG_DEBUG, "MobilenetSSDNcnn", "JNI_OnLoad");
+    __android_log_print(ANDROID_LOG_DEBUG, "NCNN Detector", "JNI_OnLoad");
 
     ncnn::create_gpu_instance();
 
@@ -19,7 +19,7 @@ JNIEXPORT jint JNI_OnLoad(JavaVM *vm, void *reserved) {
 }
 
 JNIEXPORT void JNI_OnUnload(JavaVM *vm, void *reserved) {
-    __android_log_print(ANDROID_LOG_DEBUG, "MobilenetSSDNcnn", "JNI_OnUnload");
+    __android_log_print(ANDROID_LOG_DEBUG, "NCNN Detector", "JNI_OnUnload");
 
     ncnn::destroy_gpu_instance();
 }

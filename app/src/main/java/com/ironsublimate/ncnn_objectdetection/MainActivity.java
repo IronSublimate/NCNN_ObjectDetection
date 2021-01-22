@@ -50,9 +50,7 @@ public class MainActivity extends AppCompatActivity {
     private final String[] REQUIRED_PERMISSIONS = new String[]{"android.permission.CAMERA"};
 
     private ProcessCameraProvider cameraProvider = null;
-    //    private NCNNDetector ncnnDetector = new MobilenetSSDNcnn();
     private NCNNDetector ncnnDetector = null;
-    //    private ArrayList<NCNNDetector> ncnnDetectors=new ArrayList<>();
     private final HashMap<String, String> detectMethods = new HashMap<String, String>() {{
         // method name : class name
         //method name shows in GUI
@@ -81,19 +79,14 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         mPreviewView = findViewById(R.id.previewView);
-//        imageView = findViewById(R.id.imageView);
-
-//        captureImage = findViewById(R.id.captureImg);
-//        textView1 = findViewById(R.id.textView1);
         overlay = findViewById(R.id.overlay);
         button_setting = findViewById(R.id.button_setting);
-//        findViewById(R.id.linearLayout).bringToFront();
-//        findViewById(R.id.previewView).bringToFront();
         button_setting.setOnClickListener((View view) -> {
             Intent intent = new Intent(this, SettingsActivity.class);
             intent.putExtra(detectMethodsIntentName, this.detectMethods);
             startActivity(intent);
         });
+
         PreferenceManager.setDefaultValues(this, R.xml.root_preferences, false);
         Log.d(TAG, "On Create");
 
@@ -105,7 +98,6 @@ public class MainActivity extends AppCompatActivity {
         }
 
         //初始化目标检测
-
     }
 
     @Override
@@ -116,18 +108,10 @@ public class MainActivity extends AppCompatActivity {
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         this.useGPU = sharedPreferences.getBoolean(this.getResources().getString(R.string.useGPU), false);
         String methodClassName = sharedPreferences.getString(this.getResources().getString(R.string.method_index), "");
-//        Toast.makeText(this,useGPU.toString(),Toast.LENGTH_SHORT).show();
-//        Toast.makeText(this,index,Toast.LENGTH_SHORT).show();
 
-//        if (ncnnDetector == null) {
         //Choose a new detector in settings or first init detector
         if (ncnnDetector == null || !ncnnDetector.getClass().getName().equals(methodClassName)) {
             try {
-//                waitCameraProcessFinished();
-//                if (this.ncnnDetector != null) {
-//                    this.ncnnDetector.Deinit();
-//                    this.ncnnDetector=null;
-//                }
                 ncnnDetector = (NCNNDetector) (Class.forName(methodClassName).newInstance());
                 boolean ret_init = ncnnDetector.Init(getAssets());
                 if (!ret_init) {
@@ -138,9 +122,6 @@ public class MainActivity extends AppCompatActivity {
                 return;
             }
         }
-//        ncnnDetector=new YoloV5Ncnn();
-
-//        }
     }
     //
 //    @Override
@@ -165,9 +146,6 @@ public class MainActivity extends AppCompatActivity {
     protected void onDestroy() {
         waitCameraProcessFinished();
         //image analyse时间过长，导致转屏的时候libc空指针异常崩溃
-//        if (cameraProvider != null) {
-//            cameraProvider.unbindAll();
-//        }
         super.onDestroy();
     }
 
@@ -246,7 +224,7 @@ public class MainActivity extends AppCompatActivity {
 //            Log.i(TAG,"Bitmap height:"+bitmap.getHeight());
             if (bitmap != null) {
                 Log.d(TAG, "before detect");
-                NCNNDetector.Obj[] objs = ncnnDetector.Detect(bitmap, false);
+                NCNNDetector.Obj[] objs = ncnnDetector.Detect(bitmap, this.useGPU);
                 Log.d(TAG, "after detect");
                 runOnUiThread(() -> {
                     overlay.drawRects(objs);
