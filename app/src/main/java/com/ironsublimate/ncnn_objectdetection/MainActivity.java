@@ -2,39 +2,41 @@ package com.ironsublimate.ncnn_objectdetection;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.graphics.*;
-import android.os.*;
+import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.Color;
+import android.graphics.Matrix;
+import android.os.Build;
+import android.os.Bundle;
+import android.os.Environment;
+import android.util.Log;
+import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.Button;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.camera.core.*;
 import androidx.camera.core.Camera;
+import androidx.camera.core.CameraSelector;
+import androidx.camera.core.ImageAnalysis;
+import androidx.camera.core.ImageCapture;
+import androidx.camera.core.Preview;
 import androidx.camera.extensions.HdrImageCaptureExtender;
 import androidx.camera.lifecycle.ProcessCameraProvider;
 import androidx.camera.view.PreviewView;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.lifecycle.LifecycleOwner;
-
-import android.content.pm.PackageManager;
-import android.util.Log;
-import android.view.View;
-import android.widget.Toast;
-
 import androidx.preference.PreferenceManager;
-import androidx.preference.SwitchPreference;
 
 import com.google.common.util.concurrent.ListenableFuture;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class MainActivity extends AppCompatActivity {
@@ -42,7 +44,7 @@ public class MainActivity extends AppCompatActivity {
     public static final String detectMethodsIntentName = "DETECT_METHOD_INTENT";
     private static final String TAG = "MainActivity";
     private static final int settings_result_code = 2;
-    private final Executor executor = Executors.newSingleThreadExecutor();
+    private final ExecutorService executor = Executors.newSingleThreadExecutor();
     private final int REQUEST_CODE_PERMISSIONS = 1001;
     //    private final String[] REQUIRED_PERMISSIONS = new String[]{"android.permission.CAMERA", "android.permission.WRITE_EXTERNAL_STORAGE"};
     private final String[] REQUIRED_PERMISSIONS = new String[]{"android.permission.CAMERA"};
@@ -67,7 +69,6 @@ public class MainActivity extends AppCompatActivity {
 //    TextView textView1;
     Overlay overlay;
     Button button_setting;
-    volatile boolean isProcessing = false; //Too stupid
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -128,16 +129,17 @@ public class MainActivity extends AppCompatActivity {
 //                    this.ncnnDetector=null;
 //                }
                 ncnnDetector = (NCNNDetector) (Class.forName(methodClassName).newInstance());
+                boolean ret_init = ncnnDetector.Init(getAssets());
+                if (!ret_init) {
+                    Log.e(TAG, "NCNN Detector Init failed");
+                }
             } catch (IllegalAccessException | InstantiationException | ClassNotFoundException e) {
                 e.printStackTrace();
                 return;
             }
         }
 //        ncnnDetector=new YoloV5Ncnn();
-        boolean ret_init = ncnnDetector.Init(getAssets());
-        if (!ret_init) {
-            Log.e(TAG, "mobilenetssdncnn Init failed");
-        }
+
 //        }
     }
     //
@@ -237,7 +239,6 @@ public class MainActivity extends AppCompatActivity {
                 .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
                 .build();
         imageAnalysis.setAnalyzer(executor, image -> {
-            isProcessing = true;
             int rotationDegrees = image.getImageInfo().getRotationDegrees();
             // insert your code here.
             Bitmap bitmap = mPreviewView.getBitmap();
@@ -252,7 +253,6 @@ public class MainActivity extends AppCompatActivity {
                 });
             }
             image.close();
-            isProcessing = false;
         });
 
         ImageCapture.Builder builder = new ImageCapture.Builder();
@@ -298,10 +298,11 @@ public class MainActivity extends AppCompatActivity {
 //        });
     }
 
-    //will catch libc error if not wait for detection finished
+    //will catch libc NULL pointer error if not wait for detection finished
     private void waitCameraProcessFinished() {
-        while (isProcessing) {
-        }
+        executor.shutdownNow();
+        imageAnalysis.clearAnalyzer();
+        while(!executor.isTerminated()){}
     }
 
     private Bitmap rotateBitmap(Bitmap origin, float alpha) {

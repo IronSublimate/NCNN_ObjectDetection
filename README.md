@@ -3,9 +3,10 @@
 
 use Tencent's [NCNN](https://github.com/Tencent/ncnn) framework to run yolov5 and mobilenet-ssd
 
-## Reference Code
+## Acknowledgement
 + [akhilbattula / android-camerax-java](https://github.com/akhilbattula/android-camerax-java) 
 + [nihui / ncnn-android-mobilenetssd](https://github.com/nihui/ncnn-android-mobilenetssd)
++ [nihui / ncnn-android-yolov5](https://github.com/nihui/ncnn-android-yolov5)
 
 ## How to Build and Run
 ### step1
@@ -27,9 +28,9 @@ open this project with Android Studio, build it and enjoy!
 1. Write a java class extends NCNNDetector and fininsh 3 method inherited from  NCNNDetector. These methods might be **native** methods.
 
    ```java
-       public boolean Init(AssetManager mgr);
-       public NCNNDetector.Obj[] Detect(Bitmap bitmap, boolean use_gpu);
-       public boolean Deinit();
+   public boolean Init(AssetManager mgr);
+   public NCNNDetector.Obj[] Detect(Bitmap bitmap, boolean use_gpu);
+   public boolean Deinit();
    ```
 
 2. Write \*jni.cpp to define native methods above and add your cpp in CMakeLists.txt.
@@ -48,4 +49,17 @@ open this project with Android Studio, build it and enjoy!
     
     See also https://github.com/Tencent/ncnn/issues/976 
     
+3. Add your class in MainActivity.java
+
+    ```java
+    private final HashMap<String, String> detectMethods = new HashMap<String, String>() {{
+        // method name : class name
+        //method name shows in GUI
+        //class name is used to reflect
+        put("MobileNet SSD", MobilenetSSDNcnn.class.getName());
+        put("YOLOv5", YoloV5Ncnn.class.getName());
+        //your class
+    }};
+    ```
+
     
