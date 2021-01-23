@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        android:id="@+id/navigation_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_gravity="start"
+        android:background="@android:color/white"
+        android:clickable="true"
+        android:focusable="true"
+        android:orientation="vertical">
+
+
+    <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+        <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="180dp">
+
+            <ImageView
+                    android:id="@+id/iv_bg"
+                    android:layout_width="match_parent"
+                    android:layout_height="180dp"
+                    android:scaleType="centerCrop" />
+
+            <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_marginStart="50dp"
+                    android:gravity="center_vertical"
+                    android:orientation="vertical">
+
+
+                <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="10dp"
+                        android:text="@string/app_name"
+                        android:textColor="@android:color/white"
+                        android:textSize="20sp"
+                        android:background="@android:color/holo_blue_light" />
+            </LinearLayout>
+
+
+        </FrameLayout>
+
+        <TextView
+                android:text="App"
+                android:layout_width="match_parent"
+                style="@style/TextTitle" />
+
+        <LinearLayout
+                android:id="@+id/ll_settings"
+                style="@style/DrawerClickableLinearLayout">
+
+            <LinearLayout
+                    android:layout_width="100dp"
+                    android:layout_height="match_parent"
+                    android:gravity="center">
+
+                <ImageView
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:src="@mipmap/settings"
+                        style="@style/DrawerClickableImage"/>
+            </LinearLayout>
+
+
+            <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Settings"
+                    android:textColor="@android:color/black"
+                    android:textSize="15sp" />
+        </LinearLayout>
+
+        <TextView
+                android:text="Information"
+                android:layout_width="match_parent"
+                android:textAppearance="@style/TextAppearance.AppCompat.Body1"
+                style="@style/TextTitle" />
+
+        <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+
+                android:id="@+id/textView_FPS"
+                style="@style/DetectionInformation"
+                android:text="FPS : 100" />
+
+        <TextView
+                android:text="About"
+                android:layout_width="match_parent"
+                style="@style/TextTitle" />
+
+        <FrameLayout
+                android:id="@+id/placeholder_settings"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+
+        <LinearLayout
+                android:id="@+id/ll_github"
+                style="@style/DrawerClickableLinearLayout">
+
+            <LinearLayout
+                    android:layout_width="100dp"
+                    android:layout_height="match_parent"
+                    android:gravity="center">
+
+                <ImageView
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:src="@mipmap/github"
+                        style="@style/DrawerClickableImage"/>
+            </LinearLayout>
+
+
+            <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="github"
+                    android:textColor="@android:color/black"
+                    android:textSize="15sp" />
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <TextView
+            android:id="@+id/tv_version"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_margin="20dp"
+            android:text="App Version: 0.0.1" />
+</LinearLayout>

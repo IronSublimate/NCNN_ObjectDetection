@@ -14,43 +14,21 @@
   ~ limitations under the License.
   -->
 
-<PreferenceScreen
-        xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto">
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto">
 
-    <PreferenceCategory
-            app:title="@string/messages_header">
+    <PreferenceCategory app:title="@string/messages_header">
 
-        <EditTextPreference
-                app:key="signature"
-                app:title="@string/signature_title"
-                app:useSimpleSummaryProvider="true"/>
-
-<!--        <ListPreference-->
-<!--                app:key="@string/method_index"-->
-<!--                app:title="@string/reply_title"-->
-<!--                app:entries="@array/reply_entries"-->
-<!--                app:entryValues="@array/reply_values"-->
-<!--                app:defaultValue="reply"-->
-<!--                app:useSimpleSummaryProvider="true" android:id="@+id/list_method"/>-->
         <ListPreference
                 app:key="@string/method_index"
                 app:title="@string/reply_title"
-                app:useSimpleSummaryProvider="true" android:id="@+id/list_method"/>
-    </PreferenceCategory>
-
-    <PreferenceCategory
-            app:title="@string/sync_header">
+                app:useSimpleSummaryProvider="true"
+                android:id="@+id/list_method" />
 
         <SwitchPreferenceCompat
                 app:key="@string/useGPU"
-                app:title="@string/sync_title" android:id="@+id/switch_useGPU"/>
-
-        <SwitchPreferenceCompat
-                app:key="attachment"
-                app:title="@string/attachment_title"
-                app:summaryOn="@string/attachment_summary_on"
-                app:summaryOff="@string/attachment_summary_off"
-                app:dependency="@string/useGPU"/>
+                app:title="@string/sync_title"
+                android:id="@+id/switch_useGPU" />
 
     </PreferenceCategory>
 

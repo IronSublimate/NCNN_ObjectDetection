@@ -19,11 +19,12 @@ public class SettingsActivity extends AppCompatActivity {
     private static ListPreference listPreference = null;
     private static SwitchPreferenceCompat useGPU = null;
 
-    private static HashMap<String,String> methodMap=null;
+    private static HashMap<String, String> methodMap = null;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        methodMap=(HashMap<String, String>)(this.getIntent().getSerializableExtra(MainActivity.detectMethodsIntentName));
+        methodMap = (HashMap<String, String>) (this.getIntent().getSerializableExtra(MainActivity.detectMethodsIntentName));
         setContentView(R.layout.settings_activity);
         getSupportFragmentManager()
                 .beginTransaction()
@@ -43,22 +44,11 @@ public class SettingsActivity extends AppCompatActivity {
         @Override
         public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
             setPreferencesFromResource(R.xml.root_preferences, rootKey);
+
             PreferenceManager manager = getPreferenceManager();
             ListPreference listPreference = manager.findPreference(this.getResources().getString(R.string.method_index));
-
-//            listPreference.setEntries(new String[]{"name hyx123567","name hyx456123"});
-//            listPreference.setEntryValues(new String[]{"MobileNet SSD","YOLOv5"});
-//            listPreference.setDefaultValue("YOLOv5");
             listPreference.setEntries(methodMap.keySet().toArray(new String[0]));
             listPreference.setEntryValues(methodMap.values().toArray(new String[0]));
-//            useGPU = manager.findPreference(KEY_SWITCH_USE_GPU);
-//            if (listPreference == null || useGPU == null) {
-//                Log.e(TAG, "Cannot find Preference");
-//                return;
-//            }
-//            listPreference.setEntries();
-//            String s=listPreference.getValue();
-//            Log.i(TAG,s);
         }
     }
 
@@ -84,12 +74,4 @@ public class SettingsActivity extends AppCompatActivity {
         //returnMain();
         super.onBackPressed();
     }
-//    @Override
-//    protected void onDestroy(){
-//        Intent intent=new Intent();
-//        intent.putExtra(this.getResources().getString(R.string.useGPU),useGPU.isChecked());
-//        intent.putExtra(this.getResources().getString(R.string.method_index),listPreference.findIndexOfValue(listPreference.getValue()));
-//        this.setResult(RESULT_OK,intent);
-//        super.onDestroy();
-//    }
 }

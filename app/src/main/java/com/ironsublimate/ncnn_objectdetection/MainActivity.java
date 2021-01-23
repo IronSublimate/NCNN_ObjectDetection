@@ -1,19 +1,18 @@
 package com.ironsublimate.ncnn_objectdetection;
 
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
-import android.graphics.Color;
 import android.graphics.Matrix;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.util.Log;
 import android.view.View;
-import android.view.Window;
-import android.view.WindowManager;
 import android.widget.Button;
+import android.widget.LinearLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -29,6 +28,8 @@ import androidx.camera.view.PreviewView;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.lifecycle.LifecycleOwner;
+import androidx.preference.ListPreference;
+import androidx.preference.PreferenceFragmentCompat;
 import androidx.preference.PreferenceManager;
 
 import com.google.common.util.concurrent.ListenableFuture;
@@ -53,7 +54,7 @@ public class MainActivity extends AppCompatActivity {
 
     private ProcessCameraProvider cameraProvider = null;
     private NCNNDetector ncnnDetector = null;
-    private final HashMap<String, String> detectMethods = new HashMap<String, String>() {{
+    private static final HashMap<String, String> detectMethods = new HashMap<String, String>() {{
         // method name : class name
         //method name shows in GUI
         //class name is used to reflect
@@ -63,18 +64,22 @@ public class MainActivity extends AppCompatActivity {
     //settings
     private boolean useGPU = false;
 
+    // UI
     PreviewView mPreviewView;
     //    ImageView imageView;
 //    ImageView captureImage;
 //    TextView textView1;
     Overlay overlay;
     Button button_setting;
+    TextView textViewFPS;
+    LinearLayout ll_settings;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        //UI
         mPreviewView = findViewById(R.id.previewView);
         overlay = findViewById(R.id.overlay);
         overlay.setOnClickListener(view->{
@@ -84,14 +89,17 @@ public class MainActivity extends AppCompatActivity {
 
 //            Toast.makeText(this,"overlay click",Toast.LENGTH_SHORT);
         });
-        button_setting = findViewById(R.id.button_setting);
-        button_setting.setOnClickListener((View view) -> {
+
+        textViewFPS=findViewById(R.id.textView_FPS);
+        ll_settings=findViewById(R.id.ll_settings);
+        ll_settings.setOnClickListener(v -> {
             Intent intent = new Intent(this, SettingsActivity.class);
             intent.putExtra(detectMethodsIntentName, this.detectMethods);
             startActivity(intent);
         });
 
         ImmersionBar.with(this).hideBar(BarHide.FLAG_HIDE_BAR).init();
+
         PreferenceManager.setDefaultValues(this, R.xml.root_preferences, false);
         Log.d(TAG, "On Create");
 
@@ -128,24 +136,6 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     }
-    //
-//    @Override
-//    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-//        super.onActivityResult(requestCode, requestCode, data);
-//        switch (requestCode) {
-//            case settings_result_code:
-//                if (resultCode == RESULT_OK) {
-//                    this.useGPU = data.getBooleanExtra(this.getResources().getString(R.string.useGPU), false);
-//                    Toast.makeText(MainActivity.this, "" + this.useGPU, Toast.LENGTH_SHORT).show();
-//                    int method_index = data.getIntExtra(this.getResources().getString(R.string.method_index), -1);
-//                    if (method_index >= 0) {
-//                        Toast.makeText(MainActivity.this, "" + method_index, Toast.LENGTH_SHORT).show();
-//                    }
-//                }
-//                break;
-//            default:
-//        }
-//    }
 
     @Override
     protected void onDestroy() {
@@ -174,6 +164,7 @@ public class MainActivity extends AppCompatActivity {
     //    static int i = 0;
     ImageAnalysis imageAnalysis = null;
 
+    @SuppressLint("DefaultLocale")
     void bindPreview(@NonNull ProcessCameraProvider cameraProvider) {
 
         Preview preview = new Preview.Builder()
@@ -193,11 +184,15 @@ public class MainActivity extends AppCompatActivity {
 //            Log.i(TAG,"Bitmap width:"+bitmap.getWidth());
 //            Log.i(TAG,"Bitmap height:"+bitmap.getHeight());
             if (bitmap != null) {
-                Log.d(TAG, "before detect");
+//                Log.d(TAG, "before detect");
+                long tick=System.nanoTime();
                 NCNNDetector.Obj[] objs = ncnnDetector.Detect(bitmap, this.useGPU);
-                Log.d(TAG, "after detect");
+                long tock=System.nanoTime();
+//                Log.d(TAG, "after detect");`
+                double fps=1.0e9/(tock-tick);
                 runOnUiThread(() -> {
                     overlay.drawRects(objs);
+                    textViewFPS.setText(String.format("FPS: %4.2f",fps));
                 });
             }
             image.close();
