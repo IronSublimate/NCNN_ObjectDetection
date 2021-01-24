@@ -28,10 +28,9 @@
 static ncnn::UnlockedPoolAllocator g_blob_pool_allocator;
 static ncnn::PoolAllocator g_workspace_pool_allocator;
 
-static ncnn::Net mobilenetssd;
+static ncnn::Net *mobilenetssd = nullptr;
 
-struct Object
-{
+struct Object {
     float x;
     float y;
     float w;
@@ -55,70 +54,74 @@ static jfieldID probId;
 
 
 // public native boolean Init(AssetManager mgr);
-JNIEXPORT jboolean JNICALL Java_com_ironsublimate_ncnn_1objectdetection_MobilenetSSDNcnn_Init(JNIEnv* env, jobject thiz, jobject assetManager)
-{
-    ncnn::Option opt;
-    opt.lightmode = true;
-    opt.num_threads = 4;
-    opt.blob_allocator = &g_blob_pool_allocator;
-    opt.workspace_allocator = &g_workspace_pool_allocator;
-    opt.use_packing_layout = true;
+JNIEXPORT jboolean JNICALL
+Java_com_ironsublimate_ncnn_1objectdetection_MobilenetSSDNcnn_Init(JNIEnv *env, jobject thiz,
+                                                                   jobject assetManager) {
+    if(mobilenetssd==nullptr) {
+        mobilenetssd=new ncnn::Net;
+        ncnn::Option opt;
+        opt.lightmode = true;
+        opt.num_threads = 4;
+        opt.blob_allocator = &g_blob_pool_allocator;
+        opt.workspace_allocator = &g_workspace_pool_allocator;
+        opt.use_packing_layout = true;
 
-    // use vulkan compute
-    if (ncnn::get_gpu_count() != 0)
-        opt.use_vulkan_compute = true;
+        // use vulkan compute
+        if (ncnn::get_gpu_count() != 0)
+            opt.use_vulkan_compute = true;
 
-    AAssetManager* mgr = AAssetManager_fromJava(env, assetManager);
+        AAssetManager *mgr = AAssetManager_fromJava(env, assetManager);
 
-    mobilenetssd.opt = opt;
+        mobilenetssd->opt = opt;
 
-    // init param
-    {
-        int ret = mobilenetssd.load_param(mgr, "mobilenet_ssd_voc_ncnn.param");
-        if (ret != 0)
+        // init param
         {
-            __android_log_print(ANDROID_LOG_DEBUG, "MobilenetSSDNcnn", "load_param failed");
-            return JNI_FALSE;
+            int ret = mobilenetssd->load_param(mgr, "mobilenet_ssd_voc_ncnn.param");
+            if (ret != 0) {
+                __android_log_print(ANDROID_LOG_DEBUG, "MobilenetSSDNcnn", "load_param failed");
+                return JNI_FALSE;
+            }
         }
-    }
 
-    // init bin
-    {
-        int ret = mobilenetssd.load_model(mgr, "mobilenet_ssd_voc_ncnn.bin");
-        if (ret != 0)
+        // init bin
         {
-            __android_log_print(ANDROID_LOG_DEBUG, "MobilenetSSDNcnn", "load_model failed");
-            return JNI_FALSE;
+            int ret = mobilenetssd->load_model(mgr, "mobilenet_ssd_voc_ncnn.bin");
+            if (ret != 0) {
+                __android_log_print(ANDROID_LOG_DEBUG, "MobilenetSSDNcnn", "load_model failed");
+                return JNI_FALSE;
+            }
         }
+
+        // init jni glue
+        jclass localObjCls = env->FindClass(
+                "com/ironsublimate/ncnn_objectdetection/NCNNDetector$Obj");
+        objCls = reinterpret_cast<jclass>(env->NewGlobalRef(localObjCls));
+
+        constructortorId = env->GetMethodID(objCls, "<init>", "()V");
+
+        xId = env->GetFieldID(objCls, "x", "F");
+        yId = env->GetFieldID(objCls, "y", "F");
+        wId = env->GetFieldID(objCls, "w", "F");
+        hId = env->GetFieldID(objCls, "h", "F");
+        labelId = env->GetFieldID(objCls, "label", "Ljava/lang/String;");
+        probId = env->GetFieldID(objCls, "prob", "F");
     }
-
-    // init jni glue
-    jclass localObjCls = env->FindClass("com/ironsublimate/ncnn_objectdetection/NCNNDetector$Obj");
-    objCls = reinterpret_cast<jclass>(env->NewGlobalRef(localObjCls));
-
-    constructortorId = env->GetMethodID(objCls, "<init>", "()V");
-
-    xId = env->GetFieldID(objCls, "x", "F");
-    yId = env->GetFieldID(objCls, "y", "F");
-    wId = env->GetFieldID(objCls, "w", "F");
-    hId = env->GetFieldID(objCls, "h", "F");
-    labelId = env->GetFieldID(objCls, "label", "Ljava/lang/String;");
-    probId = env->GetFieldID(objCls, "prob", "F");
-
     return JNI_TRUE;
 }
 
 // public native boolean Deinit();
-JNIEXPORT jboolean JNICALL Java_com_ironsublimate_ncnn_1objectdetection_MobilenetSSDNcnn_Deinit(JNIEnv* env, jobject thiz)
-{
-    mobilenetssd.clear();
+JNIEXPORT jboolean JNICALL
+Java_com_ironsublimate_ncnn_1objectdetection_MobilenetSSDNcnn_Deinit(JNIEnv *env, jobject thiz) {
+    delete mobilenetssd;
+    mobilenetssd = nullptr;
     return JNI_TRUE;
 }
 // public native Obj[] Detect(Bitmap bitmap, boolean use_gpu);
-JNIEXPORT jobjectArray JNICALL Java_com_ironsublimate_ncnn_1objectdetection_MobilenetSSDNcnn_Detect(JNIEnv* env, jobject thiz, jobject bitmap, jboolean use_gpu)
-{
-    if (use_gpu == JNI_TRUE && ncnn::get_gpu_count() == 0)
-    {
+JNIEXPORT jobjectArray JNICALL
+Java_com_ironsublimate_ncnn_1objectdetection_MobilenetSSDNcnn_Detect(JNIEnv *env, jobject thiz,
+                                                                     jobject bitmap,
+                                                                     jboolean use_gpu) {
+    if (use_gpu == JNI_TRUE && ncnn::get_gpu_count() == 0) {
         return NULL;
         //return env->NewStringUTF("no vulkan capable gpu");
     }
@@ -133,16 +136,17 @@ JNIEXPORT jobjectArray JNICALL Java_com_ironsublimate_ncnn_1objectdetection_Mobi
         return NULL;
 
     // ncnn from bitmap
-    ncnn::Mat in = ncnn::Mat::from_android_bitmap_resize(env, bitmap, ncnn::Mat::PIXEL_BGR, 300, 300);
+    ncnn::Mat in = ncnn::Mat::from_android_bitmap_resize(env, bitmap, ncnn::Mat::PIXEL_BGR, 300,
+                                                         300);
 
     // mobilenetssd
     std::vector<Object> objects;
     {
         const float mean_vals[3] = {127.5f, 127.5f, 127.5f};
-        const float norm_vals[3] = {1.0/127.5,1.0/127.5,1.0/127.5};
+        const float norm_vals[3] = {1.0 / 127.5, 1.0 / 127.5, 1.0 / 127.5};
         in.substract_mean_normalize(mean_vals, norm_vals);
 
-        ncnn::Extractor ex = mobilenetssd.create_extractor();
+        ncnn::Extractor ex = mobilenetssd->create_extractor();
 
         ex.set_vulkan_compute(use_gpu);
 
@@ -151,9 +155,8 @@ JNIEXPORT jobjectArray JNICALL Java_com_ironsublimate_ncnn_1objectdetection_Mobi
         ncnn::Mat out;
         ex.extract("detection_out", out);
 
-        for (int i=0; i<out.h; i++)
-        {
-            const float* values = out.row(i);
+        for (int i = 0; i < out.h; i++) {
+            const float *values = out.row(i);
 
             Object object;
             object.label = values[0];
@@ -168,17 +171,16 @@ JNIEXPORT jobjectArray JNICALL Java_com_ironsublimate_ncnn_1objectdetection_Mobi
     }
 
     // objects to Obj[]
-    static const char* class_names[] = {"background",
-        "aeroplane", "bicycle", "bird", "boat",
-        "bottle", "bus", "car", "cat", "chair",
-        "cow", "diningtable", "dog", "horse",
-        "motorbike", "person", "pottedplant",
-        "sheep", "sofa", "train", "tvmonitor"};
+    static const char *class_names[] = {"background",
+                                        "aeroplane", "bicycle", "bird", "boat",
+                                        "bottle", "bus", "car", "cat", "chair",
+                                        "cow", "diningtable", "dog", "horse",
+                                        "motorbike", "person", "pottedplant",
+                                        "sheep", "sofa", "train", "tvmonitor"};
 
     jobjectArray jObjArray = env->NewObjectArray(objects.size(), objCls, NULL);
 
-    for (size_t i=0; i<objects.size(); i++)
-    {
+    for (size_t i = 0; i < objects.size(); i++) {
         jobject jObj = env->NewObject(objCls, constructortorId, thiz);
 
         env->SetFloatField(jObj, xId, objects[i].x);

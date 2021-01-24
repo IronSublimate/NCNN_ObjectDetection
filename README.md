@@ -51,16 +51,21 @@ open this project with Android Studio, build it and enjoy!
 3. Add your class in MainActivity.java
 
     ```java
-    private final HashMap<String, String> detectMethods = new HashMap<String, String>() {{
-        // method name : class name
-        //method name shows in GUI
-        //class name is used to reflect
-        put("MobileNet SSD", MobilenetSSDNcnn.class.getName());
-        put("YOLOv5", YoloV5Ncnn.class.getName());
-        //your class
-    }};
+    public class MainActivity extends AppCompatActivity {
+        //...
+        private static final HashMap<String, String> detectNetwork = new HashMap<String, String>() {{
+            // class name ： method name
+            //method name shows in GUI
+            //class name is used to reflect
+            put(MobilenetSSDNcnn.class.getName(), "MobileNet SSD");
+            put(YoloV5Ncnn.class.getName(), "YOLOv5");
+            put(NanoDet.class.getName(), "Nano Det");
+        put(YOLOv4Tiny.class.getName(),"YOLOv4 Tiny");
+        }};
+        //...
+    }
     ```
-
+    
     
 
 ## Acknowledgement

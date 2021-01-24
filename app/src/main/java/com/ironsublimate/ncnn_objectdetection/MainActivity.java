@@ -65,11 +65,7 @@ public class MainActivity extends AppCompatActivity {
 
     // UI
     PreviewView mPreviewView;
-    //    ImageView imageView;
-//    ImageView captureImage;
-//    TextView textView1;
     Overlay overlay;
-    Button button_setting;
     TextView textViewFPS;
     TextView textViewNetwork;
     LinearLayout ll_settings;
