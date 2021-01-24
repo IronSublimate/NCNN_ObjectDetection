@@ -3,16 +3,9 @@
 >
 > Source Code: https://github.com/IronSublimate/NCNN_ObjectDetection
 
-use Tencent's [NCNN](https://github.com/Tencent/ncnn) framework to run yolov5 and mobilenet-ssd
+use Tencent's [NCNN](https://github.com/Tencent/ncnn) framework to run yolov4-tiny yolov5 and mobilenet-ssd
 
-## Acknowledgement
-+ CameraX Demo
-  + [akhilbattula / android-camerax-java](https://github.com/akhilbattula/android-camerax-java) 
-+ NCNN Object Detection Demo
-  + [nihui / ncnn-android-mobilenetssd](https://github.com/nihui/ncnn-android-mobilenetssd)
-  + [nihui / ncnn-android-yolov5](https://github.com/nihui/ncnn-android-yolov5)
-+ Hide Action Bar, Status Bar and Navigation Bar
-  + [gyf-dev / ImmersionBar](https://github.com/gyf-dev/ImmersionBar)
+
 
 ## How to Build and Run
 ### step1
@@ -69,3 +62,14 @@ open this project with Android Studio, build it and enjoy!
     ```
 
     
+
+## Acknowledgement
+
++ CameraX Demo
+  + [akhilbattula / android-camerax-java](https://github.com/akhilbattula/android-camerax-java) 
++ NCNN Object Detection Demo
+  + [nihui / ncnn-android-mobilenetssd](https://github.com/nihui/ncnn-android-mobilenetssd)
+  + [nihui / ncnn-android-yolov5](https://github.com/nihui/ncnn-android-yolov5)
+  + [RangiLyu / nanodet](https://github.com/RangiLyu/nanodet/tree/main/demo_android_ncnn)
++ Hide Action Bar, Status Bar and Navigation Bar
+  + [gyf-dev / ImmersionBar](https://github.com/gyf-dev/ImmersionBar)

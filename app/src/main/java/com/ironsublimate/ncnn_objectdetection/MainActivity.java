@@ -52,11 +52,13 @@ public class MainActivity extends AppCompatActivity {
     private ProcessCameraProvider cameraProvider = null;
     private NCNNDetector ncnnDetector = null;
     private static final HashMap<String, String> detectNetwork = new HashMap<String, String>() {{
-        // method name : class name
+        // class name ： method name
         //method name shows in GUI
         //class name is used to reflect
         put(MobilenetSSDNcnn.class.getName(), "MobileNet SSD");
         put(YoloV5Ncnn.class.getName(), "YOLOv5");
+        put(NanoDet.class.getName(), "Nano Det");
+        put(YOLOv4Tiny.class.getName(),"YOLOv4 Tiny");
     }};
     //settings
     private boolean useGPU = false;
@@ -100,8 +102,6 @@ public class MainActivity extends AppCompatActivity {
         } else {
             ActivityCompat.requestPermissions(this, REQUIRED_PERMISSIONS, REQUEST_CODE_PERMISSIONS);
         }
-
-        //初始化目标检测
     }
 
     @Override
@@ -146,7 +146,7 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onDestroy() {
-                waitCameraProcessFinished();
+        waitCameraProcessFinished();
         //image analyse时间过长，导致转屏的时候libc空指针异常崩溃
         super.onDestroy();
     }
@@ -252,12 +252,12 @@ public class MainActivity extends AppCompatActivity {
     //will catch libc NULL pointer error if not wait for detection finished
 
     private void waitCameraProcessFinished() {
-        if(executor!=null) {
+        if (executor != null) {
             executor.shutdownNow();
             //imageAnalysis.clearAnalyzer();
             while (!executor.isTerminated()) {
             }
-            executor=null;
+            executor = null;
         }
         //CameraX.unbindAll();
     }

@@ -39,6 +39,8 @@ add_library(
         NCNN_detector_public_jni.cpp
         mobilenetssdncnn_jni.cpp
         yolov5ncnn_jni.cpp
+        NanoDet_jni.cpp
+        yolov4_tiny_jni.cpp
         # add your cpp here
 )
 
