@@ -18,7 +18,6 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.camera.core.Camera;
 import androidx.camera.core.CameraSelector;
-import androidx.camera.core.CameraX;
 import androidx.camera.core.ImageAnalysis;
 import androidx.camera.core.ImageCapture;
 import androidx.camera.core.Preview;
@@ -45,7 +44,7 @@ public class MainActivity extends AppCompatActivity {
     public static final String detectMethodsIntentName = "DETECT_METHOD_INTENT";
     private static final String TAG = "MainActivity";
     private static final int settings_result_code = 2;
-    private final ExecutorService executor = Executors.newSingleThreadExecutor();
+    private ExecutorService executor = null;
     private final int REQUEST_CODE_PERMISSIONS = 1001;
     //    private final String[] REQUIRED_PERMISSIONS = new String[]{"android.permission.CAMERA", "android.permission.WRITE_EXTERNAL_STORAGE"};
     private final String[] REQUIRED_PERMISSIONS = new String[]{"android.permission.CAMERA"};
@@ -56,8 +55,8 @@ public class MainActivity extends AppCompatActivity {
         // method name : class name
         //method name shows in GUI
         //class name is used to reflect
-        put(MobilenetSSDNcnn.class.getName(),"MobileNet SSD");
-        put(YoloV5Ncnn.class.getName(),"YOLOv5");
+        put(MobilenetSSDNcnn.class.getName(), "MobileNet SSD");
+        put(YoloV5Ncnn.class.getName(), "YOLOv5");
     }};
     //settings
     private boolean useGPU = false;
@@ -79,18 +78,18 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         //UI
+        ImmersionBar.with(MainActivity.this).hideBar(BarHide.FLAG_HIDE_BAR).init();
         mPreviewView = findViewById(R.id.previewView);
         overlay = findViewById(R.id.overlay);
-        textViewFPS=findViewById(R.id.textView_FPS);
-        textViewNetwork=findViewById(R.id.textView_Network);
-        ll_settings=findViewById(R.id.ll_settings);
+        textViewFPS = findViewById(R.id.textView_FPS);
+        textViewNetwork = findViewById(R.id.textView_Network);
+        ll_settings = findViewById(R.id.ll_settings);
         ll_settings.setOnClickListener(v -> {
             Intent intent = new Intent(this, SettingsActivity.class);
-            intent.putExtra(detectMethodsIntentName, this.detectNetwork);
+            intent.putExtra(detectMethodsIntentName, detectNetwork);
             startActivity(intent);
         });
 
-        ImmersionBar.with(this).hideBar(BarHide.FLAG_HIDE_BAR).init();
 
         PreferenceManager.setDefaultValues(this, R.xml.root_preferences, false);
         Log.d(TAG, "On Create");
@@ -108,7 +107,17 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        updateSettings();
+        new Thread() {
+            @Override
+            public void run() {
+                super.run();
+                updateSettings();
+                // otherwise it will randomly show Navigation Bar and Status Bar
+                runOnUiThread(() -> {
+                    ImmersionBar.with(MainActivity.this).hideBar(BarHide.FLAG_HIDE_BAR).init();
+                });
+            }
+        }.start();
     }
 
     private void updateSettings() {
@@ -120,23 +129,24 @@ public class MainActivity extends AppCompatActivity {
         //Choose a new detector in settings or first init detector
         if (ncnnDetector == null || !ncnnDetector.getClass().getName().equals(networkClassName)) {
             try {
-                ncnnDetector = (NCNNDetector) (Class.forName(networkClassName).newInstance());
-                String s="Network: "+detectNetwork.getOrDefault(networkClassName,"");
+                NCNNDetector tempDetector = (NCNNDetector) (Class.forName(networkClassName).newInstance());
+                String s = "Network: " + detectNetwork.getOrDefault(networkClassName, "");
                 textViewNetwork.setText(s);
-                boolean ret_init = ncnnDetector.Init(getAssets());
+                boolean ret_init = tempDetector.Init(getAssets());
                 if (!ret_init) {
                     Log.e(TAG, "NCNN Detector Init failed");
+                } else {
+                    ncnnDetector = tempDetector;
                 }
             } catch (IllegalAccessException | InstantiationException | ClassNotFoundException e) {
                 e.printStackTrace();
-                ncnnDetector = null;
             }
         }
     }
 
     @Override
     protected void onDestroy() {
-        waitCameraProcessFinished();
+                waitCameraProcessFinished();
         //image analyse时间过长，导致转屏的时候libc空指针异常崩溃
         super.onDestroy();
     }
@@ -174,22 +184,23 @@ public class MainActivity extends AppCompatActivity {
         imageAnalysis = new ImageAnalysis.Builder()
                 .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
                 .build();
+        executor = Executors.newSingleThreadExecutor();
         imageAnalysis.setAnalyzer(executor, image -> {
             int rotationDegrees = image.getImageInfo().getRotationDegrees();
             // insert your code here.
             Bitmap bitmap = mPreviewView.getBitmap();
 //            Log.i(TAG,"Bitmap width:"+bitmap.getWidth());
 //            Log.i(TAG,"Bitmap height:"+bitmap.getHeight());
-            if (bitmap != null) {
+            if (bitmap != null && ncnnDetector != null) {
 //                Log.d(TAG, "before detect");
-                long tick=System.nanoTime();
+                long tick = System.nanoTime();
                 NCNNDetector.Obj[] objs = ncnnDetector.Detect(bitmap, this.useGPU);
-                long tock=System.nanoTime();
+                long tock = System.nanoTime();
 //                Log.d(TAG, "after detect");`
-                double fps=1.0e9/(tock-tick);
+                double fps = 1.0e9 / (tock - tick);
                 runOnUiThread(() -> {
                     overlay.drawRects(objs);
-                    textViewFPS.setText(String.format("FPS: %4.2f",fps));
+                    textViewFPS.setText(String.format("FPS: %4.2f", fps));
                 });
             }
             image.close();
@@ -241,10 +252,14 @@ public class MainActivity extends AppCompatActivity {
     //will catch libc NULL pointer error if not wait for detection finished
 
     private void waitCameraProcessFinished() {
-        executor.shutdownNow();
-        //imageAnalysis.clearAnalyzer();
-        while(!executor.isTerminated()){}
-//        CameraX.unbindAll();
+        if(executor!=null) {
+            executor.shutdownNow();
+            //imageAnalysis.clearAnalyzer();
+            while (!executor.isTerminated()) {
+            }
+            executor=null;
+        }
+        //CameraX.unbindAll();
     }
 
     private Bitmap rotateBitmap(Bitmap origin, float alpha) {
