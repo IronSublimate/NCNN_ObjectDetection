@@ -47,8 +47,8 @@ public class SettingsActivity extends AppCompatActivity {
 
             PreferenceManager manager = getPreferenceManager();
             ListPreference listPreference = manager.findPreference(this.getResources().getString(R.string.method_index));
-            listPreference.setEntries(methodMap.keySet().toArray(new String[0]));
-            listPreference.setEntryValues(methodMap.values().toArray(new String[0]));
+            listPreference.setEntries(methodMap.values().toArray(new String[0]));
+            listPreference.setEntryValues(methodMap.keySet().toArray(new String[0]));
         }
     }
 

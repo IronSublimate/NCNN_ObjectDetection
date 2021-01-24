@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
+
+
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
         android:id="@+id/navigation_view"
         android:layout_width="match_parent"
@@ -65,7 +67,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
                         android:src="@mipmap/settings"
-                        style="@style/DrawerClickableImage"/>
+                        style="@style/DrawerClickableImage" />
             </LinearLayout>
 
 
@@ -82,6 +84,14 @@
                 android:layout_width="match_parent"
                 android:textAppearance="@style/TextAppearance.AppCompat.Body1"
                 style="@style/TextTitle" />
+
+        <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+
+                android:id="@+id/textView_Network"
+                style="@style/DetectionInformation"
+                android:text="Net: YOLOv5" />
 
         <TextView
                 android:layout_width="match_parent"
@@ -114,7 +124,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
                         android:src="@mipmap/github"
-                        style="@style/DrawerClickableImage"/>
+                        style="@style/DrawerClickableImage" />
             </LinearLayout>
 
 
@@ -128,11 +138,25 @@
 
     </LinearLayout>
 
-    <TextView
-            android:id="@+id/tv_version"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+    <LinearLayout
+            android:orientation="vertical"
             android:layout_gravity="center"
             android:layout_margin="20dp"
-            android:text="App Version: 0.0.1" />
+            android:layout_height="wrap_content"
+            android:layout_width="wrap_content">
+
+        <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:text="App Version" />
+
+
+        <TextView
+                android:id="@+id/tv_version"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:text="@string/versionName" />
+    </LinearLayout>
 </LinearLayout>

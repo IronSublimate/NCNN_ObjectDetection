@@ -9,7 +9,6 @@ import android.graphics.Matrix;
 import android.os.Bundle;
 import android.os.Environment;
 import android.util.Log;
-import android.view.View;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -19,6 +18,7 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.camera.core.Camera;
 import androidx.camera.core.CameraSelector;
+import androidx.camera.core.CameraX;
 import androidx.camera.core.ImageAnalysis;
 import androidx.camera.core.ImageCapture;
 import androidx.camera.core.Preview;
@@ -28,8 +28,6 @@ import androidx.camera.view.PreviewView;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.lifecycle.LifecycleOwner;
-import androidx.preference.ListPreference;
-import androidx.preference.PreferenceFragmentCompat;
 import androidx.preference.PreferenceManager;
 
 import com.google.common.util.concurrent.ListenableFuture;
@@ -54,12 +52,12 @@ public class MainActivity extends AppCompatActivity {
 
     private ProcessCameraProvider cameraProvider = null;
     private NCNNDetector ncnnDetector = null;
-    private static final HashMap<String, String> detectMethods = new HashMap<String, String>() {{
+    private static final HashMap<String, String> detectNetwork = new HashMap<String, String>() {{
         // method name : class name
         //method name shows in GUI
         //class name is used to reflect
-        put("MobileNet SSD", MobilenetSSDNcnn.class.getName());
-        put("YOLOv5", YoloV5Ncnn.class.getName());
+        put(MobilenetSSDNcnn.class.getName(),"MobileNet SSD");
+        put(YoloV5Ncnn.class.getName(),"YOLOv5");
     }};
     //settings
     private boolean useGPU = false;
@@ -72,6 +70,7 @@ public class MainActivity extends AppCompatActivity {
     Overlay overlay;
     Button button_setting;
     TextView textViewFPS;
+    TextView textViewNetwork;
     LinearLayout ll_settings;
 
     @Override
@@ -82,19 +81,12 @@ public class MainActivity extends AppCompatActivity {
         //UI
         mPreviewView = findViewById(R.id.previewView);
         overlay = findViewById(R.id.overlay);
-        overlay.setOnClickListener(view->{
-//            supportRequestWindowFeature(Window.FEATURE_ACTION_BAR);
-
-//            button_setting.setVisibility(View.INVISIBLE);
-
-//            Toast.makeText(this,"overlay click",Toast.LENGTH_SHORT);
-        });
-
         textViewFPS=findViewById(R.id.textView_FPS);
+        textViewNetwork=findViewById(R.id.textView_Network);
         ll_settings=findViewById(R.id.ll_settings);
         ll_settings.setOnClickListener(v -> {
             Intent intent = new Intent(this, SettingsActivity.class);
-            intent.putExtra(detectMethodsIntentName, this.detectMethods);
+            intent.putExtra(detectMethodsIntentName, this.detectNetwork);
             startActivity(intent);
         });
 
@@ -116,23 +108,28 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        // Load  Preference
+        updateSettings();
+    }
 
+    private void updateSettings() {
+        // Load  Preference
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         this.useGPU = sharedPreferences.getBoolean(this.getResources().getString(R.string.useGPU), false);
-        String methodClassName = sharedPreferences.getString(this.getResources().getString(R.string.method_index), "");
+        String networkClassName = sharedPreferences.getString(this.getResources().getString(R.string.method_index), "");
 
         //Choose a new detector in settings or first init detector
-        if (ncnnDetector == null || !ncnnDetector.getClass().getName().equals(methodClassName)) {
+        if (ncnnDetector == null || !ncnnDetector.getClass().getName().equals(networkClassName)) {
             try {
-                ncnnDetector = (NCNNDetector) (Class.forName(methodClassName).newInstance());
+                ncnnDetector = (NCNNDetector) (Class.forName(networkClassName).newInstance());
+                String s="Network: "+detectNetwork.getOrDefault(networkClassName,"");
+                textViewNetwork.setText(s);
                 boolean ret_init = ncnnDetector.Init(getAssets());
                 if (!ret_init) {
                     Log.e(TAG, "NCNN Detector Init failed");
                 }
             } catch (IllegalAccessException | InstantiationException | ClassNotFoundException e) {
                 e.printStackTrace();
-                return;
+                ncnnDetector = null;
             }
         }
     }
@@ -242,10 +239,12 @@ public class MainActivity extends AppCompatActivity {
     }
 
     //will catch libc NULL pointer error if not wait for detection finished
+
     private void waitCameraProcessFinished() {
         executor.shutdownNow();
-        imageAnalysis.clearAnalyzer();
+        //imageAnalysis.clearAnalyzer();
         while(!executor.isTerminated()){}
+//        CameraX.unbindAll();
     }
 
     private Bitmap rotateBitmap(Bitmap origin, float alpha) {
