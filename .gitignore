@@ -13,3 +13,4 @@
 .externalNativeBuild
 .cxx
 /app/src/main/jni/ncnn-android-vulkan-lib
+/app/release/
