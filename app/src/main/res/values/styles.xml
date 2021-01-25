@@ -13,19 +13,25 @@
         <item name="android:textColor">#0B409A</item>
         <item name="android:layout_height">50dp</item>
         <item name="android:paddingTop">10dp</item>
-        <item name="android:paddingLeft" >15dp</item>
+        <item name="android:paddingLeft">15dp</item>
     </style>
 
     <style name="DetectionInformation" parent="android:Widget.TextView">
         <item name="android:textSize">18sp</item>
         <item name="android:textColor">#0B0B0B</item>
+        <item name="android:layout_height">match_parent</item>
+        <item name="android:layout_width">wrap_content</item>
+    </style>
+
+    <style name="DrawerInformationLinearLayout">
+        <item name="android:layout_gravity">left</item>
         <item name="android:layout_height">40dp</item>
         <item name="android:paddingTop">5dp</item>
         <item name="android:paddingBottom">5dp</item>
-        <item name="android:paddingLeft" >30dp</item>
+        <item name="android:paddingLeft">30dp</item>
     </style>
 
-    <style name="DrawerClickableLinearLayout" >
+    <style name="DrawerClickableLinearLayout">
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">50dp</item>
         <item name="android:background">?attr/selectableItemBackground</item>
@@ -34,6 +40,7 @@
         <item name="android:gravity">center_vertical</item>
         <item name="android:orientation">horizontal</item>
     </style>
+
     <style name="DrawerClickableImage">
         <item name="android:layout_margin">10dp</item>
     </style>

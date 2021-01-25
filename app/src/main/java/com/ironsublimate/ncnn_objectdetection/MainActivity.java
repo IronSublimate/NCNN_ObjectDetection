@@ -6,10 +6,10 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.Matrix;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.util.Log;
-import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -58,7 +58,7 @@ public class MainActivity extends AppCompatActivity {
         put(MobilenetSSDNcnn.class.getName(), "MobileNet SSD");
         put(YoloV5Ncnn.class.getName(), "YOLOv5");
         put(NanoDet.class.getName(), "Nano Det");
-        put(YOLOv4Tiny.class.getName(),"YOLOv4 Tiny");
+        put(YOLOv4Tiny.class.getName(), "YOLOv4 Tiny");
     }};
     //settings
     private boolean useGPU = false;
@@ -69,6 +69,8 @@ public class MainActivity extends AppCompatActivity {
     TextView textViewFPS;
     TextView textViewNetwork;
     LinearLayout ll_settings;
+    LinearLayout ll_github;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -85,6 +87,11 @@ public class MainActivity extends AppCompatActivity {
         ll_settings.setOnClickListener(v -> {
             Intent intent = new Intent(this, SettingsActivity.class);
             intent.putExtra(detectMethodsIntentName, detectNetwork);
+            startActivity(intent);
+        });
+        ll_github = findViewById(R.id.ll_github);
+        ll_github.setOnClickListener(v -> {
+            Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/IronSublimate/NCNN_ObjectDetection"));
             startActivity(intent);
         });
 
@@ -108,10 +115,10 @@ public class MainActivity extends AppCompatActivity {
             public void run() {
                 super.run();
                 updateSettings();
-                // otherwise it will randomly show Navigation Bar and Status Bar
-                runOnUiThread(() -> {
-                    ImmersionBar.with(MainActivity.this).hideBar(BarHide.FLAG_HIDE_BAR).init();
-                });
+                // Use less
+                // runOnUiThread(() -> {
+                //     ImmersionBar.with(MainActivity.this).hideBar(BarHide.FLAG_HIDE_BAR).init();
+                // });
             }
         }.start();
     }
@@ -126,7 +133,7 @@ public class MainActivity extends AppCompatActivity {
         if (ncnnDetector == null || !ncnnDetector.getClass().getName().equals(networkClassName)) {
             try {
                 NCNNDetector tempDetector = (NCNNDetector) (Class.forName(networkClassName).newInstance());
-                String s = "Network: " + detectNetwork.getOrDefault(networkClassName, "");
+                String s = detectNetwork.getOrDefault(networkClassName, "");
                 textViewNetwork.setText(s);
                 boolean ret_init = tempDetector.Init(getAssets());
                 if (!ret_init) {
@@ -167,7 +174,6 @@ public class MainActivity extends AppCompatActivity {
     //    static int i = 0;
     ImageAnalysis imageAnalysis = null;
 
-    @SuppressLint("DefaultLocale")
     void bindPreview(@NonNull ProcessCameraProvider cameraProvider) {
 
         Preview preview = new Preview.Builder()
@@ -196,7 +202,7 @@ public class MainActivity extends AppCompatActivity {
                 double fps = 1.0e9 / (tock - tick);
                 runOnUiThread(() -> {
                     overlay.drawRects(objs);
-                    textViewFPS.setText(String.format("FPS: %4.2f", fps));
+                    textViewFPS.setText(String.format("%4.2f", fps));
                 });
             }
             image.close();
