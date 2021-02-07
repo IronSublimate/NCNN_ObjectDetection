@@ -35,6 +35,7 @@ import com.gyf.immersionbar.ImmersionBar;
 
 import java.io.File;
 import java.util.HashMap;
+import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -127,7 +128,13 @@ public class MainActivity extends AppCompatActivity {
         // Load  Preference
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         this.useGPU = sharedPreferences.getBoolean(this.getResources().getString(R.string.useGPU), false);
-        String networkClassName = sharedPreferences.getString(this.getResources().getString(R.string.method_index), "");
+        String networkClassName = sharedPreferences.getString(this.getResources().getString(R.string.method_index), null);
+        if(networkClassName==null){
+            Optional<String> s=detectNetwork.keySet().stream().findFirst();
+            if(s.isPresent()){
+                networkClassName=s.get();
+            }
+        }
 
         //Choose a new detector in settings or first init detector
         if (ncnnDetector == null || !ncnnDetector.getClass().getName().equals(networkClassName)) {
