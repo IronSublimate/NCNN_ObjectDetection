@@ -110,7 +110,7 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onResume() {
-        super.onResume();
+
         new Thread() {
             @Override
             public void run() {
@@ -122,6 +122,7 @@ public class MainActivity extends AppCompatActivity {
                 // });
             }
         }.start();
+        super.onResume();
     }
 
     private void updateSettings() {
@@ -141,7 +142,9 @@ public class MainActivity extends AppCompatActivity {
             try {
                 NCNNDetector tempDetector = (NCNNDetector) (Class.forName(networkClassName).newInstance());
                 String s = detectNetwork.getOrDefault(networkClassName, "");
-                textViewNetwork.setText(s);
+                runOnUiThread(()->{
+                    textViewNetwork.setText(s);
+                });
                 boolean ret_init = tempDetector.Init(getAssets());
                 if (!ret_init) {
                     Log.e(TAG, "NCNN Detector Init failed");

@@ -3,9 +3,8 @@
 >
 > Source Code: https://github.com/IronSublimate/NCNN_ObjectDetection
 
-use Tencent's [NCNN](https://github.com/Tencent/ncnn) framework to run yolov4-tiny yolov5 and mobilenet-ssd
-
-
+use Tencent's [NCNN](https://github.com/Tencent/ncnn) framework to run yolov4-tiny yolov5 and mobilenet-ssd  
+NCNN Verison : 20210322
 
 ## How to Build and Run
 ### step1
@@ -66,7 +65,8 @@ open this project with Android Studio, build it and enjoy!
     }
     ```
     
-    
+## Known Issues
+1. Might be crashed when first open this app    
 
 ## Acknowledgement
 

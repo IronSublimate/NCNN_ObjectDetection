@@ -2,16 +2,16 @@ package com.ironsublimate.ncnn_objectdetection;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.MenuItem;
-import android.view.View;
-import android.widget.Switch;
+
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.preference.*;
+import androidx.preference.ListPreference;
+import androidx.preference.PreferenceFragmentCompat;
+import androidx.preference.PreferenceManager;
+import androidx.preference.SwitchPreferenceCompat;
 
 import java.util.HashMap;
-import java.util.List;
 
 public class SettingsActivity extends AppCompatActivity {
     private static final String TAG = "SettingsActivity";
@@ -50,7 +50,9 @@ public class SettingsActivity extends AppCompatActivity {
             listPreference.setEntries(methodMap.values().toArray(new String[0]));
             listPreference.setEntryValues(methodMap.keySet().toArray(new String[0]));
 //            listPreference.setDefaultValue(methodMap.keySet().stream().findFirst());
-            listPreference.setValueIndex(0);
+            if (listPreference.getValue() == null) {
+                listPreference.setValueIndex(0);
+            }
         }
     }
 

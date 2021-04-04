@@ -20,4 +20,5 @@ add_library(
 target_link_libraries(ncnn_detector
     ncnn
     jnigraphics
+    glslang
 )
