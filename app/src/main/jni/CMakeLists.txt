@@ -14,11 +14,12 @@ add_library(
         yolov5ncnn_jni.cpp
         NanoDet_jni.cpp
         yolov4_tiny_jni.cpp
+        yolox_jni.cpp
         # add your cpp here
 )
 
 target_link_libraries(ncnn_detector
     ncnn
     jnigraphics
-    glslang
+#    glslang
 )

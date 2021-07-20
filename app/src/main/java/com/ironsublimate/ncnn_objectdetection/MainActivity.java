@@ -6,7 +6,9 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.Matrix;
+import android.graphics.Rect;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.util.Log;
@@ -34,6 +36,7 @@ import com.gyf.immersionbar.BarHide;
 import com.gyf.immersionbar.ImmersionBar;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
@@ -60,6 +63,7 @@ public class MainActivity extends AppCompatActivity {
         put(YoloV5Ncnn.class.getName(), "YOLOv5");
         put(NanoDet.class.getName(), "Nano Det");
         put(YOLOv4Tiny.class.getName(), "YOLOv4 Tiny");
+        put(YoloX.class.getName(), "YOLOX Nano");
     }};
     //settings
     private boolean useGPU = false;
@@ -95,11 +99,24 @@ public class MainActivity extends AppCompatActivity {
             Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/IronSublimate/NCNN_ObjectDetection"));
             startActivity(intent);
         });
+        TextView ncnn_version = findViewById(R.id.tv_ncnn_version);
+        ncnn_version.setText(NCNNDetector.get_ncnn_version());
 
 
         PreferenceManager.setDefaultValues(this, R.xml.root_preferences, false);
         Log.d(TAG, "On Create");
 
+        //to show left drawer, disable gesture
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {//android 10 手势排除
+            ArrayList<Rect> rs = new ArrayList<Rect>();
+
+            Rect r = new Rect();
+            this.getWindowManager().getDefaultDisplay().getRectSize(r);
+            r.right = r.right / 4;
+            r.bottom = r.bottom * 6 / 8;
+            rs.add(r);
+            overlay.setSystemGestureExclusionRects(rs);
+        }
 
         if (allPermissionsGranted()) {
             startCamera(); //start camera if permission has been granted by user
@@ -130,10 +147,10 @@ public class MainActivity extends AppCompatActivity {
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         this.useGPU = sharedPreferences.getBoolean(this.getResources().getString(R.string.useGPU), false);
         String networkClassName = sharedPreferences.getString(this.getResources().getString(R.string.method_index), null);
-        if(networkClassName==null){
-            Optional<String> s=detectNetwork.keySet().stream().findFirst();
-            if(s.isPresent()){
-                networkClassName=s.get();
+        if (networkClassName == null) {
+            Optional<String> s = detectNetwork.keySet().stream().findFirst();
+            if (s.isPresent()) {
+                networkClassName = s.get();
             }
         }
 
@@ -142,7 +159,7 @@ public class MainActivity extends AppCompatActivity {
             try {
                 NCNNDetector tempDetector = (NCNNDetector) (Class.forName(networkClassName).newInstance());
                 String s = detectNetwork.getOrDefault(networkClassName, "");
-                runOnUiThread(()->{
+                runOnUiThread(() -> {
                     textViewNetwork.setText(s);
                 });
                 boolean ret_init = tempDetector.Init(getAssets());

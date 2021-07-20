@@ -20,4 +20,6 @@ public abstract class NCNNDetector {
     public abstract Obj[] Detect(Bitmap bitmap, boolean use_gpu);
 
     public abstract boolean Deinit();
+
+    public static native String get_ncnn_version();
 }
