@@ -67,6 +67,10 @@ open this project with Android Studio, build it and enjoy!
     
 ## Known Issues
 1. Might be crashed when first open this app    
+2. only ncnn version 1.0.20220420 and before is supported, other version will crash in yolox_s-int8
+   ```cpp
+        yoloXInt8.load_model(mgr, "yolox_s-int8.bin");
+   ```
 
 ## Acknowledgement
 

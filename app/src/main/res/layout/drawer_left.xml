@@ -1,6 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-
+<layout>
+    <data class="DrawerBinding">
+        <variable
+            name="ncnnVersion"
+            type="String" />
+    </data>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/navigation_view"
     android:layout_width="300dp"
@@ -234,10 +239,11 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_gravity="start"
-                        android:text="0.0.0" />
+                        android:text="@{ncnnVersion}" />
                 </TableRow>
 
             </TableLayout>
         </LinearLayout>
     </ScrollView>
 </LinearLayout>
+</layout>

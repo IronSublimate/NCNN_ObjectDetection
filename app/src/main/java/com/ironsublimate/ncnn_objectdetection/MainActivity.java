@@ -28,6 +28,7 @@ import androidx.camera.lifecycle.ProcessCameraProvider;
 import androidx.camera.view.PreviewView;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.databinding.DataBindingUtil;
 import androidx.lifecycle.LifecycleOwner;
 import androidx.preference.PreferenceManager;
 
@@ -42,6 +43,7 @@ import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import com.ironsublimate.ncnn_objectdetection.databinding.DrawerBinding;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -64,6 +66,7 @@ public class MainActivity extends AppCompatActivity {
         put(NanoDet.class.getName(), "Nano Det");
         put(YOLOv4Tiny.class.getName(), "YOLOv4 Tiny");
         put(YoloX.class.getName(), "YOLOX Nano");
+        put(YoloxInt8.class.getName(), "YOLOX_s int8");
     }};
     //settings
     private boolean useGPU = false;
@@ -101,7 +104,8 @@ public class MainActivity extends AppCompatActivity {
         });
         TextView ncnn_version = findViewById(R.id.tv_ncnn_version);
         ncnn_version.setText(NCNNDetector.get_ncnn_version());
-
+//        DrawerBinding binding = DataBindingUtil.setContentView(this,R.layout.activity_main);
+//        binding.setNcnnVersion(NCNNDetector.get_ncnn_version());
 
         PreferenceManager.setDefaultValues(this, R.xml.root_preferences, false);
         Log.d(TAG, "On Create");

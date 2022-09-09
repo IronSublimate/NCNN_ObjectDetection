@@ -32,6 +32,9 @@ android {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
+    dataBinding {
+        enabled = true
+    }
     buildTypes {
         release {
             minifyEnabled false
@@ -41,6 +44,7 @@ android {
 
         }
     }
+    ndkVersion '23.0.7599858'
 }
 
 dependencies {

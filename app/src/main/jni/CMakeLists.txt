@@ -7,6 +7,8 @@ cmake_minimum_required(VERSION 3.4.1)
 set(ncnn_DIR ${CMAKE_SOURCE_DIR}/ncnn-android-vulkan-lib/${ANDROID_ABI}/lib/cmake/ncnn)
 find_package(ncnn REQUIRED)
 
+#add_definitions(-static-openmp)
+
 add_library(
         ncnn_detector SHARED
         NCNN_detector_public_jni.cpp
@@ -15,6 +17,7 @@ add_library(
         NanoDet_jni.cpp
         yolov4_tiny_jni.cpp
         yolox_jni.cpp
+        yolox_s-int8_jni.cpp
         # add your cpp here
 )
 

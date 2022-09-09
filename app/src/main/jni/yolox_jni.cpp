@@ -19,61 +19,15 @@
 #include "benchmark.h"
 #include <jni.h>
 
+#include "YoloV5Focus.h"
+
 static ncnn::UnlockedPoolAllocator g_blob_pool_allocator;
 static ncnn::PoolAllocator g_workspace_pool_allocator;
 
 static ncnn::Net yoloX;
 
-class YoloXFocus : public ncnn::Layer
-{
-public:
-    YoloXFocus()
-    {
-        one_blob_only = true;
-    }
 
-    virtual int forward(const ncnn::Mat& bottom_blob, ncnn::Mat& top_blob, const ncnn::Option& opt) const
-    {
-        int w = bottom_blob.w;
-        int h = bottom_blob.h;
-        int channels = bottom_blob.c;
-
-        int outw = w / 2;
-        int outh = h / 2;
-        int outc = channels * 4;
-
-        top_blob.create(outw, outh, outc, 4u, 1, opt.blob_allocator);
-        if (top_blob.empty())
-            return -100;
-
-#pragma omp parallel for num_threads(opt.num_threads)
-        for (int p = 0; p < outc; p++)
-        {
-            const float* ptr = bottom_blob.channel(p % channels).row((p / channels) % 2) + ((p / channels) / 2);
-            float* outptr = top_blob.channel(p);
-
-            for (int i = 0; i < outh; i++)
-            {
-                for (int j = 0; j < outw; j++)
-                {
-                    *outptr = *ptr;
-
-                    outptr += 1;
-                    ptr += 2;
-                }
-
-                ptr += w;
-            }
-        }
-
-        return 0;
-    }
-};
-
-DEFINE_LAYER_CREATOR(YoloXFocus)
-
-struct Object
-{
+struct Object {
     float x;
     float y;
     float w;
@@ -82,17 +36,14 @@ struct Object
     float prob;
 };
 
-struct GridAndStride
-{
+struct GridAndStride {
     int grid0;
     int grid1;
     int stride;
 };
 
-static inline float intersection_area(const Object& a, const Object& b)
-{
-    if (a.x > b.x + b.w || a.x + a.w < b.x || a.y > b.y + b.h || a.y + a.h < b.y)
-    {
+static inline float intersection_area(const Object &a, const Object &b) {
+    if (a.x > b.x + b.w || a.x + a.w < b.x || a.y > b.y + b.h || a.y + a.h < b.y) {
         // no intersection
         return 0.f;
     }
@@ -103,22 +54,19 @@ static inline float intersection_area(const Object& a, const Object& b)
     return inter_width * inter_height;
 }
 
-static void qsort_descent_inplace(std::vector<Object>& faceobjects, int left, int right)
-{
+static void qsort_descent_inplace(std::vector<Object> &faceobjects, int left, int right) {
     int i = left;
     int j = right;
     float p = faceobjects[(left + right) / 2].prob;
 
-    while (i <= j)
-    {
+    while (i <= j) {
         while (faceobjects[i].prob > p)
             i++;
 
         while (faceobjects[j].prob < p)
             j--;
 
-        if (i <= j)
-        {
+        if (i <= j) {
             // swap
             std::swap(faceobjects[i], faceobjects[j]);
 
@@ -140,34 +88,30 @@ static void qsort_descent_inplace(std::vector<Object>& faceobjects, int left, in
     }
 }
 
-static void qsort_descent_inplace(std::vector<Object>& faceobjects)
-{
+static void qsort_descent_inplace(std::vector<Object> &faceobjects) {
     if (faceobjects.empty())
         return;
 
     qsort_descent_inplace(faceobjects, 0, faceobjects.size() - 1);
 }
 
-static void nms_sorted_bboxes(const std::vector<Object>& faceobjects, std::vector<int>& picked, float nms_threshold)
-{
+static void nms_sorted_bboxes(const std::vector<Object> &faceobjects, std::vector<int> &picked,
+                              float nms_threshold) {
     picked.clear();
 
     const int n = faceobjects.size();
 
     std::vector<float> areas(n);
-    for (int i = 0; i < n; i++)
-    {
+    for (int i = 0; i < n; i++) {
         areas[i] = faceobjects[i].w * faceobjects[i].h;
     }
 
-    for (int i = 0; i < n; i++)
-    {
-        const Object& a = faceobjects[i];
+    for (int i = 0; i < n; i++) {
+        const Object &a = faceobjects[i];
 
         int keep = 1;
-        for (int j = 0; j < (int)picked.size(); j++)
-        {
-            const Object& b = faceobjects[picked[j]];
+        for (int j = 0; j < (int) picked.size(); j++) {
+            const Object &b = faceobjects[picked[j]];
 
             // intersection over union
             float inter_area = intersection_area(a, b);
@@ -182,33 +126,31 @@ static void nms_sorted_bboxes(const std::vector<Object>& faceobjects, std::vecto
     }
 }
 
-static void generate_grids_and_stride(const int target_size, std::vector<int>& strides, std::vector<GridAndStride>& grid_strides)
-{
-    for (auto stride : strides)
-    {
+static void generate_grids_and_stride(const int target_size, std::vector<int> &strides,
+                                      std::vector<GridAndStride> &grid_strides) {
+    for (auto stride: strides) {
         int num_grid = target_size / stride;
-        for (int g1 = 0; g1 < num_grid; g1++)
-        {
-            for (int g0 = 0; g0 < num_grid; g0++)
-            {
-                grid_strides.push_back((GridAndStride){g0, g1, stride});
+        for (int g1 = 0; g1 < num_grid; g1++) {
+            for (int g0 = 0; g0 < num_grid; g0++) {
+                grid_strides.push_back((GridAndStride) {g0, g1, stride});
             }
         }
     }
 }
 
-static void generate_yolox_proposals(std::vector<GridAndStride> grid_strides, const ncnn::Mat& feat_blob, float prob_threshold, std::vector<Object>& objects)
-{
+static void
+generate_yolox_proposals(std::vector<GridAndStride> grid_strides, const ncnn::Mat &feat_blob,
+                         float prob_threshold, std::vector<Object> &objects) {
     const int num_grid = feat_blob.h;
-    fprintf(stderr, "output height: %d, width: %d, channels: %d, dims:%d\n", feat_blob.h, feat_blob.w, feat_blob.c, feat_blob.dims);
+    fprintf(stderr, "output height: %d, width: %d, channels: %d, dims:%d\n", feat_blob.h,
+            feat_blob.w, feat_blob.c, feat_blob.dims);
 
     const int num_class = feat_blob.w - 5;
 
     const int num_anchors = grid_strides.size();
 
-    const float* feat_ptr = feat_blob.channel(0);
-    for (int anchor_idx = 0; anchor_idx < num_anchors; anchor_idx++)
-    {
+    const float *feat_ptr = feat_blob.channel(0);
+    for (int anchor_idx = 0; anchor_idx < num_anchors; anchor_idx++) {
         const int grid0 = grid_strides[anchor_idx].grid0;
         const int grid1 = grid_strides[anchor_idx].grid1;
         const int stride = grid_strides[anchor_idx].stride;
@@ -224,12 +166,10 @@ static void generate_yolox_proposals(std::vector<GridAndStride> grid_strides, co
         float y0 = y_center - h * 0.5f;
 
         float box_objectness = feat_ptr[4];
-        for (int class_idx = 0; class_idx < num_class; class_idx++)
-        {
+        for (int class_idx = 0; class_idx < num_class; class_idx++) {
             float box_cls_score = feat_ptr[5 + class_idx];
             float box_prob = box_objectness * box_cls_score;
-            if (box_prob > prob_threshold)
-            {
+            if (box_prob > prob_threshold) {
                 Object obj;
                 obj.x = x0;
                 obj.y = y0;
@@ -262,8 +202,9 @@ static jfieldID probId;
 
 
 // public native boolean Init(AssetManager mgr);
-JNIEXPORT jboolean JNICALL Java_com_ironsublimate_ncnn_1objectdetection_YoloX_Init(JNIEnv* env, jobject thiz, jobject assetManager)
-{
+JNIEXPORT jboolean JNICALL
+Java_com_ironsublimate_ncnn_1objectdetection_YoloX_Init(JNIEnv *env, jobject thiz,
+                                                        jobject assetManager) {
     ncnn::Option opt;
     opt.lightmode = true;
     opt.num_threads = 4;
@@ -275,17 +216,16 @@ JNIEXPORT jboolean JNICALL Java_com_ironsublimate_ncnn_1objectdetection_YoloX_In
     if (ncnn::get_gpu_count() != 0)
         opt.use_vulkan_compute = true;
 
-    AAssetManager* mgr = AAssetManager_fromJava(env, assetManager);
+    AAssetManager *mgr = AAssetManager_fromJava(env, assetManager);
 
     yoloX.opt = opt;
 
-    yoloX.register_custom_layer("YoloV5Focus", YoloXFocus_layer_creator);
+    yoloX.register_custom_layer("YoloV5Focus", YoloV5Focus_layer_creator);
 
     // init param
     {
         int ret = yoloX.load_param(mgr, "yolox-nano.param");
-        if (ret != 0)
-        {
+        if (ret != 0) {
             __android_log_print(ANDROID_LOG_DEBUG, "YOLOXncnn", "load_param failed");
             return JNI_FALSE;
         }
@@ -294,8 +234,7 @@ JNIEXPORT jboolean JNICALL Java_com_ironsublimate_ncnn_1objectdetection_YoloX_In
     // init bin
     {
         int ret = yoloX.load_model(mgr, "yolox-nano.bin");
-        if (ret != 0)
-        {
+        if (ret != 0) {
             __android_log_print(ANDROID_LOG_DEBUG, "YOLOXncnn", "load_model failed");
             return JNI_FALSE;
         }
@@ -321,13 +260,12 @@ JNIEXPORT jboolean JNICALL Java_com_ironsublimate_ncnn_1objectdetection_YoloX_In
 JNIEXPORT jobjectArray JNICALL
 Java_com_ironsublimate_ncnn_1objectdetection_YoloX_Detect(JNIEnv *env, jobject thiz, jobject bitmap,
                                                           jboolean use_gpu) {
-    if (use_gpu == JNI_TRUE && ncnn::get_gpu_count() == 0)
-    {
+    if (use_gpu == JNI_TRUE && ncnn::get_gpu_count() == 0) {
         return nullptr;
         //return env->NewStringUTF("no vulkan capable gpu");
     }
-
-    double start_time = ncnn::get_current_time();
+    double t0, t1, t2, t3;
+    t0 = ncnn::get_current_time();
 
     AndroidBitmapInfo info;
     AndroidBitmap_getInfo(env, bitmap, &info);
@@ -349,15 +287,12 @@ Java_com_ironsublimate_ncnn_1objectdetection_YoloX_Detect(JNIEnv *env, jobject t
     int w = width;
     int h = height;
     float scale = 1.f;
-    if (w > h)
-    {
-        scale = (float)target_size / w;
+    if (w > h) {
+        scale = (float) target_size / w;
         w = target_size;
         h = h * scale;
-    }
-    else
-    {
-        scale = (float)target_size / h;
+    } else {
+        scale = (float) target_size / h;
         h = target_size;
         w = w * scale;
     }
@@ -374,10 +309,11 @@ Java_com_ironsublimate_ncnn_1objectdetection_YoloX_Detect(JNIEnv *env, jobject t
 
     // yolox
     std::vector<Object> objects;
+
+    in_pad.substract_mean_normalize(mean_vals, norm_vals);
+    t1 = ncnn::get_current_time();
+
     {
-
-        in_pad.substract_mean_normalize(mean_vals, norm_vals);
-
         ncnn::Extractor ex = yoloX.create_extractor();
 
         ex.set_vulkan_compute(use_gpu);
@@ -390,6 +326,7 @@ Java_com_ironsublimate_ncnn_1objectdetection_YoloX_Detect(JNIEnv *env, jobject t
         {
             ncnn::Mat out;
             ex.extract("output", out);
+            t2 = ncnn::get_current_time();
 
             std::vector<GridAndStride> grid_strides;
             generate_grids_and_stride(target_size, strides, grid_strides);
@@ -407,8 +344,7 @@ Java_com_ironsublimate_ncnn_1objectdetection_YoloX_Detect(JNIEnv *env, jobject t
         int count = picked.size();
 
         objects.resize(count);
-        for (int i = 0; i < count; i++)
-        {
+        for (int i = 0; i < count; i++) {
             objects[i] = proposals[picked[i]];
 
             // adjust offset to original unpadded
@@ -418,10 +354,10 @@ Java_com_ironsublimate_ncnn_1objectdetection_YoloX_Detect(JNIEnv *env, jobject t
             float y1 = (objects[i].y + objects[i].h) / scale;
 
             // clip
-            x0 = std::max(std::min(x0, (float)(width - 1)), 0.f);
-            y0 = std::max(std::min(y0, (float)(height - 1)), 0.f);
-            x1 = std::max(std::min(x1, (float)(width - 1)), 0.f);
-            y1 = std::max(std::min(y1, (float)(height - 1)), 0.f);
+            x0 = std::max(std::min(x0, (float) (width - 1)), 0.f);
+            y0 = std::max(std::min(y0, (float) (height - 1)), 0.f);
+            x1 = std::max(std::min(x1, (float) (width - 1)), 0.f);
+            y1 = std::max(std::min(y1, (float) (height - 1)), 0.f);
 
             objects[i].x = x0;
             objects[i].y = y0;
@@ -431,22 +367,29 @@ Java_com_ironsublimate_ncnn_1objectdetection_YoloX_Detect(JNIEnv *env, jobject t
     }
 
     // objects to Obj[]
-    static const char* class_names[] = {
-            "person", "bicycle", "car", "motorcycle", "airplane", "bus", "train", "truck", "boat", "traffic light",
-            "fire hydrant", "stop sign", "parking meter", "bench", "bird", "cat", "dog", "horse", "sheep", "cow",
-            "elephant", "bear", "zebra", "giraffe", "backpack", "umbrella", "handbag", "tie", "suitcase", "frisbee",
-            "skis", "snowboard", "sports ball", "kite", "baseball bat", "baseball glove", "skateboard", "surfboard",
-            "tennis racket", "bottle", "wine glass", "cup", "fork", "knife", "spoon", "bowl", "banana", "apple",
-            "sandwich", "orange", "broccoli", "carrot", "hot dog", "pizza", "donut", "cake", "chair", "couch",
-            "potted plant", "bed", "dining table", "toilet", "tv", "laptop", "mouse", "remote", "keyboard", "cell phone",
-            "microwave", "oven", "toaster", "sink", "refrigerator", "book", "clock", "vase", "scissors", "teddy bear",
+    static const char *class_names[] = {
+            "person", "bicycle", "car", "motorcycle", "airplane", "bus", "train", "truck", "boat",
+            "traffic light",
+            "fire hydrant", "stop sign", "parking meter", "bench", "bird", "cat", "dog", "horse",
+            "sheep", "cow",
+            "elephant", "bear", "zebra", "giraffe", "backpack", "umbrella", "handbag", "tie",
+            "suitcase", "frisbee",
+            "skis", "snowboard", "sports ball", "kite", "baseball bat", "baseball glove",
+            "skateboard", "surfboard",
+            "tennis racket", "bottle", "wine glass", "cup", "fork", "knife", "spoon", "bowl",
+            "banana", "apple",
+            "sandwich", "orange", "broccoli", "carrot", "hot dog", "pizza", "donut", "cake",
+            "chair", "couch",
+            "potted plant", "bed", "dining table", "toilet", "tv", "laptop", "mouse", "remote",
+            "keyboard", "cell phone",
+            "microwave", "oven", "toaster", "sink", "refrigerator", "book", "clock", "vase",
+            "scissors", "teddy bear",
             "hair drier", "toothbrush"
     };
 
     jobjectArray jObjArray = env->NewObjectArray(objects.size(), objCls, nullptr);
 
-    for (size_t i=0; i<objects.size(); i++)
-    {
+    for (size_t i = 0; i < objects.size(); i++) {
         jobject jObj = env->NewObject(objCls, constructortorId, thiz);
 
         env->SetFloatField(jObj, xId, objects[i].x);
@@ -459,8 +402,11 @@ Java_com_ironsublimate_ncnn_1objectdetection_YoloX_Detect(JNIEnv *env, jobject t
         env->SetObjectArrayElement(jObjArray, i, jObj);
     }
 
-    double elasped = ncnn::get_current_time() - start_time;
-    __android_log_print(ANDROID_LOG_DEBUG, "YOLOXncnn", "%.2fms   detect", elasped);
+    t3 = ncnn::get_current_time();
+//    double elasped = ncnn::get_current_time() - start_time;
+    __android_log_print(ANDROID_LOG_DEBUG, "YOLOXncnn",
+                        "%.2fms preprocess, %.2fms detect, %.2fms postprocess",
+                        t1 - t0, t2 - t1, t3 - t2);
 
     return jObjArray;
 }
